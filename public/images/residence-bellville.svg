@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">Illustrated student residence near Bellville</title><desc id="desc">A welcoming modern residence with balconies, trees and a footpath.</desc>
+  <rect width="1200" height="680" fill="#d8e9e3"/><path d="M0 390 180 210l150 150 160-210 245 240 165-190 300 210v270H0Z" fill="#a5c6ba"/><path d="M0 465h1200v215H0Z" fill="#e8d8b7"/>
+  <rect x="310" y="170" width="555" height="390" rx="10" fill="#f6f2e8"/><path d="M285 190 585 70l306 120Z" fill="#b95b47"/><rect x="355" y="225" width="465" height="18" fill="#176b58"/>
+  <g fill="#91b8a7"><rect x="360" y="275" width="90" height="94"/><rect x="505" y="275" width="90" height="94"/><rect x="650" y="275" width="90" height="94"/><rect x="360" y="410" width="90" height="94"/><rect x="650" y="410" width="90" height="94"/></g>
+  <g fill="#fff4d3"><rect x="375" y="290" width="60" height="62"/><rect x="520" y="290" width="60" height="62"/><rect x="665" y="290" width="60" height="62"/><rect x="375" y="425" width="60" height="62"/><rect x="665" y="425" width="60" height="62"/></g>
+  <rect x="520" y="405" width="60" height="155" fill="#8a4e3d"/><circle cx="200" cy="390" r="92" fill="#438a69"/><circle cx="190" cy="330" r="63" fill="#5c9d75"/><rect x="188" y="390" width="22" height="150" fill="#76563b"/>
+  <circle cx="990" cy="390" r="105" fill="#408265"/><circle cx="1010" cy="320" r="72" fill="#65a477"/><rect x="980" y="390" width="24" height="165" fill="#76563b"/>
+  <path d="M550 680 605 560h60l70 120Z" fill="#b9a98c"/><g fill="#d58c59"><circle cx="915" cy="542" r="11"/><circle cx="945" cy="548" r="11"/></g>
+</svg>

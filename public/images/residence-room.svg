@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">Illustrated student bedroom</title><desc id="desc">A bright furnished room with a bed, desk, window and plant.</desc>
+  <rect width="1200" height="680" fill="#efe6d7"/><path d="M0 0h1200v500H0Z" fill="#f7f3e9"/><path d="M0 500h1200v180H0Z" fill="#c99b70"/><rect x="95" y="90" width="330" height="260" fill="#96bdc0" stroke="#fff" stroke-width="20"/><path d="M260 90v260M95 220h330" stroke="#fff" stroke-width="15"/><circle cx="343" cy="154" r="46" fill="#f0bf67" opacity=".85"/>
+  <rect x="545" y="325" width="530" height="210" rx="15" fill="#176b58"/><rect x="565" y="292" width="485" height="85" rx="22" fill="#f4efe2"/><rect x="535" y="505" width="550" height="32" fill="#875b40"/><rect x="590" y="530" width="25" height="92" fill="#684832"/><rect x="1015" y="530" width="25" height="92" fill="#684832"/>
+  <rect x="740" y="180" width="300" height="95" rx="7" fill="#c48a5c"/><rect x="765" y="201" width="220" height="18" fill="#72503c"/><rect x="795" y="165" width="180" height="20" fill="#d4aa77"/><rect x="775" y="275" width="24" height="57" fill="#76563b"/><rect x="980" y="275" width="24" height="57" fill="#76563b"/><rect x="845" y="242" width="100" height="28" rx="4" fill="#526f70"/><rect x="858" y="222" width="74" height="20" rx="3" fill="#384d4c"/>
+  <rect x="150" y="415" width="120" height="90" fill="#d88e5b"/><path d="M190 415c-60-70 0-95 22-28 20-70 78-40 26 28" fill="#438a69"/><path d="M155 505h108l20 110H135Z" fill="#b56b4a"/>
+  <g fill="#e7bd72"><circle cx="510" cy="470" r="6"/><circle cx="1070" cy="450" r="8"/></g>
+</svg>
