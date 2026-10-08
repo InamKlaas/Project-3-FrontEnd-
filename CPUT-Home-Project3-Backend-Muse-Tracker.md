@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | 0 | Inspect actual repo + contract freeze | Yes | [x] |
 | 1 | Spring Boot runnable backend + MySQL | Yes | [x] |
-| 2 | Reconcile/reuse existing entity + repository layer | Yes | [ ] |
+| 2 | Reconcile/reuse existing entity + repository layer | Yes | [x] |
 | 3 | Auth, role authorization, student/provider identity | Yes | [ ] |
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [ ] |
 | 5 | Student ↔ landlord messaging | Yes | [ ] |
@@ -240,33 +240,33 @@ Make the previously reported 22-entity Spring Data JPA design persistent and que
 
 ### Model / repositories
 
-- [ ] Inspect and reuse `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, three accommodation subtype entities and existing relations.
-- [ ] Inspect all other reported entities; include only their existing dependencies rather than rewriting all 22 for the POC.
-- [ ] Reuse existing `UserFactory` and `AccommodationFactory` if implemented and tested.
-- [ ] Reuse/verify `UserRepository`, `StudentProfileRepository`, `LandlordProfileRepository`, `AccommodationRepository`, `RoomListingRepository`.
-- [ ] Confirm email uniqueness and student number uniqueness; enforce at DB level as well as service layer.
-- [ ] Confirm landlord verification state, `isVerified` and `VerificationStatus` remain consistent.
-- [ ] Confirm accommodation `isPublished` and `isActive` are independent. Creation must **not** publish by default.
-- [ ] Confirm new `RoomListing` requires a parent `Accommodation`, positive `monthlyRent`, valid availability and deposit values.
-- [ ] Use services for transactions; controllers use request/response DTOs, never serialize JPA graphs directly.
-- [ ] Choose documented ID strategy compatible with the frontend (numeric IDs or a stable mapping) and verify it across nested entities.
+- [x] Inspect and reuse `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, three accommodation subtype entities and existing relations.
+- [x] Inspect all other reported entities; include only their existing dependencies rather than rewriting all 22 for the POC.
+- [x] Reuse existing `UserFactory` and `AccommodationFactory` if implemented and tested.
+- [x] Reuse/verify `UserRepository`, `StudentProfileRepository`, `LandlordProfileRepository`, `AccommodationRepository`, `RoomListingRepository`.
+- [x] Confirm email uniqueness and student number uniqueness; enforce at DB level as well as service layer.
+- [x] Confirm landlord verification state, `isVerified` and `VerificationStatus` remain consistent.
+- [x] Confirm accommodation `isPublished` and `isActive` are independent. Creation must **not** publish by default.
+- [x] Confirm new `RoomListing` requires a parent `Accommodation`, positive `monthlyRent`, valid availability and deposit values.
+- [x] Use services for transactions; controllers use request/response DTOs, never serialize JPA graphs directly.
+- [x] Choose documented ID strategy compatible with the frontend (numeric IDs or a stable mapping) and verify it across nested entities.
 
 ### Database setup
 
-- [ ] Inspect whether a schema already exists. Preserve existing table names/columns when possible; use additive migrations rather than blind recreation.
-- [ ] Create/repair Flyway migration set **only if no established migration system**; reconcile initial baseline for existing DBs.
-- [ ] Add indexes for normalized email, role/verification, approval/active flags, campus/location and room availability/rent.
-- [ ] Avoid JPA auto-creating production tables; use schema validation after migrations.
-- [ ] Document relationship `Accommodation (1) -> RoomListing (many)` and subtype joins, with short Mermaid ER sketch if useful.
-- [ ] Add DTO mapper that assembles flat listing response from property + selected room. Define behavior for multiple rooms and avoid accidental duplicated cards.
+- [x] Inspect whether a schema already exists. Preserve existing table names/columns when possible; use additive migrations rather than blind recreation.
+- [x] Create/repair Flyway migration set **only if no established migration system**; reconcile initial baseline for existing DBs.
+- [x] Add indexes for normalized email, role/verification, approval/active flags, campus/location and room availability/rent.
+- [x] Avoid JPA auto-creating production tables; use schema validation after migrations.
+- [x] Document relationship `Accommodation (1) -> RoomListing (many)` and subtype joins, with short Mermaid ER sketch if useful.
+- [x] Add DTO mapper that assembles flat listing response from property + selected room. Define behavior for multiple rooms and avoid accidental duplicated cards.
 
 ### Verification / gate
 
-- [ ] Migrations apply cleanly to a **fresh MySQL database**.
-- [ ] Repeat start produces no unexpected schema mutation or duplicate data.
-- [ ] JPA validation succeeds; critical repository tests pass against MySQL/Testcontainers if available.
-- [ ] Tests prove unapproved/inactive records are excluded from public repository queries.
-- [ ] **STAGE 2 COMPLETE**
+- [x] Migrations apply cleanly to a **fresh MySQL database**.
+- [x] Repeat start produces no unexpected schema mutation or duplicate data.
+- [x] JPA validation succeeds; critical repository tests pass against MySQL/Testcontainers if available.
+- [x] Tests prove unapproved/inactive records are excluded from public repository queries.
+- [x] **STAGE 2 COMPLETE**
 
 ---
 
@@ -584,6 +584,7 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-08 ~21:00 | 0 | `Project-3-FrontEnd-` @ `40b5801`, branch `poc/backend` | tracker copy, `docs/backend/frontend-contract-audit.md`, `docs/backend/poc-scope.md` | read-only frontend inventory; `gh repo view` both repos | **STAGE 0 COMPLETE**. Remote backend domain deleted upstream (`639b691` et al, only skeleton left); Term 2 22-entity report unverifiable → bootstrap minimal `backend/` here. No React files touched. |
 | 2026-10-08 ~21:45 | 1 | `poc/backend`, `backend/` new, package `com.cputhome` | pom (Boot 4.0.6/Java 21 to match team), properties files, common errors/paging/auditing, cors/openapi/jackson/security config, `UserRole`, `compose.dev.yml`, backend README, `.env.example` | `./mvnw test` 5/5, `./mvnw package` ok, dev boot vs local MySQL `cput_home`, `GET /actuator/health` UP | **STAGE 1 COMPLETE**. Deviations: `.properties` (not yml) per owner; fresh `com.cputhome` (nothing reusable upstream). Boot 4 uses Jackson 3 (`tools.jackson`) — dropped legacy `write-dates-as-timestamps` key, explicit v2 mapper bean for error bodies. No React files touched. Backend left running :8080. |
+| 2026-10-08 ~22:20 | 2 | `poc/backend`, domain `user`+`listing` packages | `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, 3 subtype entities, 5 repositories, `V1__create_core.sql`, `ListingCardDto`+mapper, `AccommodationRepositoryTest`, `ListingCardMapperTest` | `mvn test` 15/15, fresh MySQL `cput_home` migrated V1 (11 tables), repeat boot validates clean, `GET /actuator/health` UP | **STAGE 2 COMPLETE**. Upstream domain was deleted so entities are new-but-compatible (numeric ids, lowercase wire enums, BigDecimal rents). Boot 4 needs manual Flyway runner (`FlywayConfig`, no auto-config in 4.0.6) + new `DataJpaTest` package `boot.data.jpa.test.autoconfigure`. No React files touched. Backend left running :8080. |
 
 ## Final status
 
