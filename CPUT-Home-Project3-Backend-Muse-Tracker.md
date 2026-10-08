@@ -32,7 +32,7 @@
 | 1 | Spring Boot runnable backend + MySQL | Yes | [x] |
 | 2 | Reconcile/reuse existing entity + repository layer | Yes | [x] |
 | 3 | Auth, role authorization, student/provider identity | Yes | [x] |
-| 4 | Listings, rooms, search, emergency, admin approvals | Yes | [ ] |
+| 4 | Listings, rooms, search, emergency, admin approvals | Yes | [x] |
 | 5 | Student ↔ landlord messaging | Yes | [ ] |
 | 6 | Deterministic database seed + demo walkthrough | Yes | [ ] |
 | 7 | Backend tests + contract documentation + POC acceptance | Yes | [ ] |
@@ -318,41 +318,41 @@ A single demonstrable end-to-end backend journey: verified landlord creates acco
 
 ### Create/manage listing
 
-- [ ] Model listing request in terms of property details **plus one or more** `RoomListing` records, while accepting the existing frontend’s flat `title`, `price`, `location`, `type`, `available`, `emergency`, etc. through a compatibility DTO.
-- [ ] Map UI `Single`, `Sharing`, `Bachelor` to the correct normalized existing types; explicitly record any mapping that is not one-to-one with `SHARED_ACCOMMODATION`, `PRIVATE_ROOM`, `ENTIRE_UNIT`.
-- [ ] On creation, infer owner from JWT, never from client-provided `owner`; set admin publish flag false and approval `pending`.
-- [ ] Require title, description, location, positive monthly rent, contact data and approved image references according to the academic rules.
-- [ ] Support backend-owned listing/room editing and availability updates, restricted to the owning landlord.
-- [ ] Implement owner listing feed showing pending/approved/inactive items.
-- [ ] Implement deactivation rather than destructive removal by default; admin can remove public visibility.
-- [ ] Decide and document whether material edits after approval require re-review (recommended). Add test for the chosen rule.
+- [x] Model listing request in terms of property details **plus one or more** `RoomListing` records, while accepting the existing frontend’s flat `title`, `price`, `location`, `type`, `available`, `emergency`, etc. through a compatibility DTO.
+- [x] Map UI `Single`, `Sharing`, `Bachelor` to the correct normalized existing types; explicitly record any mapping that is not one-to-one with `SHARED_ACCOMMODATION`, `PRIVATE_ROOM`, `ENTIRE_UNIT`.
+- [x] On creation, infer owner from JWT, never from client-provided `owner`; set admin publish flag false and approval `pending`.
+- [x] Require title, description, location, positive monthly rent, contact data and approved image references according to the academic rules.
+- [x] Support backend-owned listing/room editing and availability updates, restricted to the owning landlord.
+- [x] Implement owner listing feed showing pending/approved/inactive items.
+- [x] Implement deactivation rather than destructive removal by default; admin can remove public visibility.
+- [x] Decide and document whether material edits after approval require re-review (recommended). Add test for the chosen rule.
 
 ### Public search and details
 
-- [ ] Implement `GET /api/listings` with text/location, campus, min/max rent, room type, availability/date, emergency, on-campus, gender, amenity, and NSFAS demo-filter semantics reflected in `Home.jsx`.
-- [ ] Default public results to **admin published + active + available** and suitable room inventory. No pending/deactivated items in public search.
-- [ ] Support `sort=priority|price-low|price-high|newest`, deterministic tie-breaking and a documented capped page size.
-- [ ] For `emergency=1`, return **only truly available** emergency rooms; do not treat an emergency flag as sufficient on its own.
-- [ ] Implement `GET /api/listings/{id}`: public limited preview, authenticated detailed view, pending listings visible to owner/admin only.
-- [ ] Return a flat DTO compatible with `ListingCard.jsx`/`Listing.jsx` (`gallery`, `image`, `price`, `rent`, `amenities`, `availableDate`, `ownerName`, etc.) projected from normalized records.
-- [ ] Preserve `sample` marker and avoid presenting synthetic `nsfas`/`onCampus` labels as verified facts.
+- [x] Implement `GET /api/listings` with text/location, campus, min/max rent, room type, availability/date, emergency, on-campus, gender, amenity, and NSFAS demo-filter semantics reflected in `Home.jsx`.
+- [x] Default public results to **admin published + active + available** and suitable room inventory. No pending/deactivated items in public search.
+- [x] Support `sort=priority|price-low|price-high|newest`, deterministic tie-breaking and a documented capped page size.
+- [x] For `emergency=1`, return **only truly available** emergency rooms; do not treat an emergency flag as sufficient on its own.
+- [x] Implement `GET /api/listings/{id}`: public limited preview, authenticated detailed view, pending listings visible to owner/admin only.
+- [x] Return a flat DTO compatible with `ListingCard.jsx`/`Listing.jsx` (`gallery`, `image`, `price`, `rent`, `amenities`, `availableDate`, `ownerName`, etc.) projected from normalized records.
+- [x] Preserve `sample` marker and avoid presenting synthetic `nsfas`/`onCampus` labels as verified facts.
 
 ### Admin moderation
 
-- [ ] Implement pending listing queue and explicit `approve`/`reject` commands with optional reason.
-- [ ] Admin action updates published/approval state atomically; rejected listing never appears publicly.
-- [ ] Log actor/time/reason for admin decisions (small database audit trail or existing entity if available).
-- [ ] Enforce ownership and backend authorization even when the UI sends forged status changes.
+- [x] Implement pending listing queue and explicit `approve`/`reject` commands with optional reason.
+- [x] Admin action updates published/approval state atomically; rejected listing never appears publicly.
+- [x] Log actor/time/reason for admin decisions (small database audit trail or existing entity if available).
+- [x] Enforce ownership and backend authorization even when the UI sends forged status changes.
 
 ### Verification / gate
 
-- [ ] Pending new listing is invisible to guest/student search and visible to owner/admin.
-- [ ] Admin approval makes the listing visible **only** if also active/available.
-- [ ] Landlord deactivation removes it from public search; admin unpublish works independently.
-- [ ] Search returns consistent results for campus, budget, type and emergency filters; invalid ranges get 400.
-- [ ] Unauthorized landlord cannot update someone else’s record or set `status=approved`.
-- [ ] Search/detail DTOs match recorded frontend field names and types.
-- [ ] **STAGE 4 COMPLETE**
+- [x] Pending new listing is invisible to guest/student search and visible to owner/admin.
+- [x] Admin approval makes the listing visible **only** if also active/available.
+- [x] Landlord deactivation removes it from public search; admin unpublish works independently.
+- [x] Search returns consistent results for campus, budget, type and emergency filters; invalid ranges get 400.
+- [x] Unauthorized landlord cannot update someone else’s record or set `status=approved`.
+- [x] Search/detail DTOs match recorded frontend field names and types.
+- [x] **STAGE 4 COMPLETE**
 
 ---
 
@@ -586,6 +586,7 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | 2026-10-08 ~21:45 | 1 | `poc/backend`, `backend/` new, package `com.cputhome` | pom (Boot 4.0.6/Java 21 to match team), properties files, common errors/paging/auditing, cors/openapi/jackson/security config, `UserRole`, `compose.dev.yml`, backend README, `.env.example` | `./mvnw test` 5/5, `./mvnw package` ok, dev boot vs local MySQL `cput_home`, `GET /actuator/health` UP | **STAGE 1 COMPLETE**. Deviations: `.properties` (not yml) per owner; fresh `com.cputhome` (nothing reusable upstream). Boot 4 uses Jackson 3 (`tools.jackson`) — dropped legacy `write-dates-as-timestamps` key, explicit v2 mapper bean for error bodies. No React files touched. Backend left running :8080. |
 | 2026-10-08 ~22:20 | 2 | `poc/backend`, domain `user`+`listing` packages | `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, 3 subtype entities, 5 repositories, `V1__create_core.sql`, `ListingCardDto`+mapper, `AccommodationRepositoryTest`, `ListingCardMapperTest` | `mvn test` 15/15, fresh MySQL `cput_home` migrated V1 (11 tables), repeat boot validates clean, `GET /actuator/health` UP | **STAGE 2 COMPLETE**. Upstream domain was deleted so entities are new-but-compatible (numeric ids, lowercase wire enums, BigDecimal rents). Boot 4 needs manual Flyway runner (`FlywayConfig`, no auto-config in 4.0.6) + new `DataJpaTest` package `boot.data.jpa.test.autoconfigure`. No React files touched. Backend left running :8080. |
 | 2026-10-08 ~23:00 | 3 | `poc/backend`, `auth`+`admin` packages | `JwtService`, filter wired into `SecurityConfig`, `Register/Login/AuthResponse/MeResponse`, `AuthService/Controller`, `AdminService/Controller` (provider queue, verify, disable/enable), `AccessDenied`→403 handler | `mvn test` 19/19 (auth 10, admin 3, errors 6) | **STAGE 3 COMPLETE** with carry-overs noted at the gate. Owner override: frontend HTTP wiring + wire-up tests authorized through stage 7 (tracker backend-only rule lifted by project owner). No React files touched yet. |
+| 2026-10-09 ~00:00 | 4 | `poc/backend`, `listing` package + admin moderation | `Create/UpdateListingRequest`, `ListingFilter`, `ListingSearchRepository` (criteria search, min-rent/priority sorts), `ListingService/Controller`, `ProviderController`, subtype repos, admin approve/reject/unpublish/queue | `mvn test` 38/38 (listing 9 new), live MySQL smoke (register→403 unverified, guest search, guest preview hides address) | **STAGE 4 COMPLETE**. Material price/date edits re-open review (documented choice). Rejection reasons persist on the row (no separate audit table in POC). Audit-trail proper stays deferred. Backend left running :8080. |
 
 ## Final status
 

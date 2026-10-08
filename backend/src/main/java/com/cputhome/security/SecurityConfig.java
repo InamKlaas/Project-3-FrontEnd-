@@ -64,6 +64,9 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/swagger-ui.html")
                     .permitAll()
+                    /* guest preview: public shelf and limited detail */
+                    .requestMatchers(HttpMethod.GET, "/api/listings", "/api/listings/*")
+                    .permitAll()
                     .requestMatchers("/api/**")
                     .authenticated()
                     .anyRequest()

@@ -1,5 +1,6 @@
 package com.cputhome.admin;
 
+import com.cputhome.listing.ListingCardDto;
 import com.cputhome.security.UserPrincipal;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -50,5 +51,23 @@ public class AdminController {
       @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long id) {
     service.setUserEnabled(id, true, principal);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/listings")
+  public List<ListingCardDto> pendingListings(@RequestParam(required = false) String status) {
+    if (status != null && !"pending".equalsIgnoreCase(status)) {
+      throw new com.cputhome.common.BadRequestException("VALIDATION_ERROR", "only status=pending is supported here");
+    }
+    return service.pendingListings();
+  }
+
+  @PostMapping("/listings/{id}/approve")
+  public ListingCardDto approve(@PathVariable Long id) {
+    return service.approveListing(id);
+  }
+
+  @PostMapping("/listings/{id}/reject")
+  public ListingCardDto reject(@PathVariable Long id, @RequestBody(required = false) RejectListingRequest request) {
+    return service.rejectListing(id, request == null ? null : request.reason());
   }
 }

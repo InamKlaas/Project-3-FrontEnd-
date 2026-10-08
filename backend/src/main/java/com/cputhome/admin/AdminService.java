@@ -2,6 +2,10 @@ package com.cputhome.admin;
 
 import com.cputhome.common.ForbiddenException;
 import com.cputhome.common.NotFoundException;
+import com.cputhome.listing.Accommodation;
+import com.cputhome.listing.AccommodationRepository;
+import com.cputhome.listing.ListingCardDto;
+import com.cputhome.listing.ListingCardMapper;
 import com.cputhome.security.UserPrincipal;
 import com.cputhome.user.LandlordProfile;
 import com.cputhome.user.LandlordProfileRepository;
@@ -20,10 +24,18 @@ public class AdminService {
 
   private final UserRepository users;
   private final LandlordProfileRepository landlords;
+  private final AccommodationRepository accommodations;
+  private final ListingCardMapper cards;
 
-  public AdminService(UserRepository users, LandlordProfileRepository landlords) {
+  public AdminService(
+      UserRepository users,
+      LandlordProfileRepository landlords,
+      AccommodationRepository accommodations,
+      ListingCardMapper cards) {
     this.users = users;
     this.landlords = landlords;
+    this.accommodations = accommodations;
+    this.cards = cards;
   }
 
   @Transactional(readOnly = true)
@@ -63,5 +75,42 @@ public class AdminService {
     User user = users.findById(userId).orElseThrow(() -> new NotFoundException("user not found"));
     user.setEnabled(enabled);
     users.save(user);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ListingCardDto> pendingListings() {
+    return accommodations.findAll().stream()
+        .filter(row -> "pending".equals(row.getApprovalStatus()))
+        .map(cards::card)
+        .toList();
+  }
+
+  /* approval is one atomic flip, rejections keep their reason on the row */
+  @Transactional
+  public ListingCardDto approveListing(Long id) {
+    Accommodation accommodation =
+        accommodations.findById(id).orElseThrow(() -> new NotFoundException("listing not found"));
+    accommodation.setPublished(true);
+    accommodation.setApprovalStatus("approved");
+    accommodation.setRejectionReason(null);
+    return cards.card(accommodations.save(accommodation));
+  }
+
+  @Transactional
+  public ListingCardDto rejectListing(Long id, String reason) {
+    Accommodation accommodation =
+        accommodations.findById(id).orElseThrow(() -> new NotFoundException("listing not found"));
+    accommodation.setPublished(false);
+    accommodation.setApprovalStatus("rejected");
+    accommodation.setRejectionReason(reason == null || reason.isBlank() ? "no reason given" : reason.trim());
+    return cards.card(accommodations.save(accommodation));
+  }
+
+  @Transactional
+  public void unpublishListing(Long id) {
+    Accommodation accommodation =
+        accommodations.findById(id).orElseThrow(() -> new NotFoundException("listing not found"));
+    accommodation.setPublished(false);
+    accommodations.save(accommodation);
   }
 }
