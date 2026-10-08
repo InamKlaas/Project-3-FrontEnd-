@@ -15,20 +15,23 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-/* stateless security, public doors are few and listed below.
- * the jwt filter joins in stage 3 with the user domain. */
+/* stateless jwt security, public doors are few and listed below */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
+  private final JwtAuthenticationFilter jwtFilter;
   private final CorsConfigurationSource cors;
   private final ObjectMapper mapper;
 
   public SecurityConfig(
+      JwtAuthenticationFilter jwtFilter,
       @Qualifier("corsConfigurationSource") CorsConfigurationSource cors,
       ObjectMapper mapper) {
+    this.jwtFilter = jwtFilter;
     this.cors = cors;
     this.mapper = mapper;
   }
@@ -54,6 +57,8 @@ public class SecurityConfig {
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
                     .requestMatchers(
+                        "/api/auth/register",
+                        "/api/auth/login",
                         "/actuator/health",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
@@ -62,7 +67,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/**")
                     .authenticated()
                     .anyRequest()
-                    .permitAll());
+                    .permitAll())
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
 

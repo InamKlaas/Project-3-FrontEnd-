@@ -46,6 +46,16 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
+  void methodSecurityDenialMapsTo403() {
+    ResponseEntity<ApiErrorResponse> response =
+        handler.handleDenied(
+            new org.springframework.security.access.AccessDeniedException("nope"), request);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    assertThat(response.getBody().code()).isEqualTo("FORBIDDEN");
+  }
+
+  @Test
   void unknownHidesInternals() {
     ResponseEntity<ApiErrorResponse> response =
         handler.handleUnknown(new IllegalStateException("db password=hunter2"), request);

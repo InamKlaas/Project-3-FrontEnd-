@@ -42,6 +42,19 @@ public class GlobalExceptionHandler {
     return error(HttpStatus.valueOf(ex.getStatus()), ex.getCode(), ex.getMessage(), null, request);
   }
 
+  /* method-security denials surface here, past the filter handlers */
+  @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+  public ResponseEntity<ApiErrorResponse> handleDenied(
+      org.springframework.security.access.AccessDeniedException ex, HttpServletRequest request) {
+    return error(HttpStatus.FORBIDDEN, "FORBIDDEN", "you may not perform this action", null, request);
+  }
+
+  @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+  public ResponseEntity<ApiErrorResponse> handleUnauthenticated(
+      org.springframework.security.core.AuthenticationException ex, HttpServletRequest request) {
+    return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "authentication required", null, request);
+  }
+
   /* generic server error does not expose internal exception details */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleUnknown(Exception ex, HttpServletRequest request) {

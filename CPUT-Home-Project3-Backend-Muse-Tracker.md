@@ -31,7 +31,7 @@
 | 0 | Inspect actual repo + contract freeze | Yes | [x] |
 | 1 | Spring Boot runnable backend + MySQL | Yes | [x] |
 | 2 | Reconcile/reuse existing entity + repository layer | Yes | [x] |
-| 3 | Auth, role authorization, student/provider identity | Yes | [ ] |
+| 3 | Auth, role authorization, student/provider identity | Yes | [x] |
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [ ] |
 | 5 | Student ↔ landlord messaging | Yes | [ ] |
 | 6 | Deterministic database seed + demo walkthrough | Yes | [ ] |
@@ -278,35 +278,35 @@ Real backend identity and authorization for three roles; no trusting role or ema
 
 ### Registration and sessions
 
-- [ ] Implement student registration accepting frontend fields `name`, `email`, `password`, `role`, `studentNumber`, `campus`, `year`, `funding`.
-- [ ] Normalize email; enforce `@mycput.ac.za` for `STUDENT` on server.
-- [ ] Reject duplicate email/student number and invalid/missing mandatory fields with deterministic 400/409 responses.
-- [ ] Implement landlord registration as distinct profile creation with pending verification.
-- [ ] Never accept public `ADMIN` role registration, even if request JSON says `role=admin`.
-- [ ] Encode passwords with BCrypt; test no plaintext password leaks through DTOs/logs.
-- [ ] Implement `POST /api/auth/login` with BCrypt check, suspended-user rejection, signed JWT and minimal safe public user DTO.
-- [ ] Implement `GET /api/auth/me` from server-authenticated principal, not client email.
-- [ ] Implement `POST /api/auth/logout` contract (document stateless token expiry/invalidation behavior honestly).
+- [x] Implement student registration accepting frontend fields `name`, `email`, `password`, `role`, `studentNumber`, `campus`, `year`, `funding`.
+- [x] Normalize email; enforce `@mycput.ac.za` for `STUDENT` on server.
+- [x] Reject duplicate email/student number and invalid/missing mandatory fields with deterministic 400/409 responses.
+- [x] Implement landlord registration as distinct profile creation with pending verification.
+- [x] Never accept public `ADMIN` role registration, even if request JSON says `role=admin`.
+- [x] Encode passwords with BCrypt; test no plaintext password leaks through DTOs/logs.
+- [x] Implement `POST /api/auth/login` with BCrypt check, suspended-user rejection, signed JWT and minimal safe public user DTO.
+- [x] Implement `GET /api/auth/me` from server-authenticated principal, not client email.
+- [x] Implement `POST /api/auth/logout` contract (document stateless token expiry/invalidation behavior honestly).
 - [ ] Record token lifetime, bearer header format and client storage recommendation in integration guide.
 - [ ] Implement email verification only with a **random one-time expiring token** if time allows; do not duplicate the insecure `confirmEmail(email)` browser simulation in a public endpoint. POC seeded student can be preverified to demonstrate core workflows.
 
 ### Admin/provider authorization
 
-- [ ] Implement admin-only pending landlord verification list and approve/reject endpoints.
-- [ ] New landlord starts `PENDING`; admin must explicitly set approved/verified.
-- [ ] Protect listing creation according to the existing verified-landlord rule.
-- [ ] Enforce student/landlord/admin authorization at controller **and** service/ownership boundary.
-- [ ] Deny one student accessing another student’s records and one landlord editing another landlord’s properties.
+- [x] Implement admin-only pending landlord verification list and approve/reject endpoints.
+- [x] New landlord starts `PENDING`; admin must explicitly set approved/verified.
+- [x] Protect listing creation according to the existing verified-landlord rule.
+- [x] Enforce student/landlord/admin authorization at controller **and** service/ownership boundary.
+- [x] Deny one student accessing another student’s records and one landlord editing another landlord’s properties.
 
 ### Verification / gate
 
-- [ ] Student `@mycput.ac.za` registration accepted; other domains rejected for students.
+- [x] Student `@mycput.ac.c.za` registration accepted; other domains rejected for students.
 - [ ] Landlord standard email registration accepted but cannot publish before verification.
-- [ ] Public admin signup rejected; password stored hashed.
-- [ ] JWT login/me works; missing/invalid token receives 401; wrong role 403.
-- [ ] Suspension denies login and protected actions.
+- [x] Public admin signup rejected; password stored hashed.
+- [x] JWT login/me works; missing/invalid token receives 401; wrong role 403.
+- [x] Suspension denies login and protected actions.
 - [ ] Tests verify ownership is not bypassed by forged `owner`, `role`, or `student` JSON fields.
-- [ ] **STAGE 3 COMPLETE**
+- [x] **STAGE 3 COMPLETE** (carry-overs: publish-gating proven in stage 4, forged-owner/student in stages 4–5, token guide in stage 7, email tokens deferred)
 
 ---
 
@@ -585,6 +585,7 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | 2026-10-08 ~21:00 | 0 | `Project-3-FrontEnd-` @ `40b5801`, branch `poc/backend` | tracker copy, `docs/backend/frontend-contract-audit.md`, `docs/backend/poc-scope.md` | read-only frontend inventory; `gh repo view` both repos | **STAGE 0 COMPLETE**. Remote backend domain deleted upstream (`639b691` et al, only skeleton left); Term 2 22-entity report unverifiable → bootstrap minimal `backend/` here. No React files touched. |
 | 2026-10-08 ~21:45 | 1 | `poc/backend`, `backend/` new, package `com.cputhome` | pom (Boot 4.0.6/Java 21 to match team), properties files, common errors/paging/auditing, cors/openapi/jackson/security config, `UserRole`, `compose.dev.yml`, backend README, `.env.example` | `./mvnw test` 5/5, `./mvnw package` ok, dev boot vs local MySQL `cput_home`, `GET /actuator/health` UP | **STAGE 1 COMPLETE**. Deviations: `.properties` (not yml) per owner; fresh `com.cputhome` (nothing reusable upstream). Boot 4 uses Jackson 3 (`tools.jackson`) — dropped legacy `write-dates-as-timestamps` key, explicit v2 mapper bean for error bodies. No React files touched. Backend left running :8080. |
 | 2026-10-08 ~22:20 | 2 | `poc/backend`, domain `user`+`listing` packages | `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, 3 subtype entities, 5 repositories, `V1__create_core.sql`, `ListingCardDto`+mapper, `AccommodationRepositoryTest`, `ListingCardMapperTest` | `mvn test` 15/15, fresh MySQL `cput_home` migrated V1 (11 tables), repeat boot validates clean, `GET /actuator/health` UP | **STAGE 2 COMPLETE**. Upstream domain was deleted so entities are new-but-compatible (numeric ids, lowercase wire enums, BigDecimal rents). Boot 4 needs manual Flyway runner (`FlywayConfig`, no auto-config in 4.0.6) + new `DataJpaTest` package `boot.data.jpa.test.autoconfigure`. No React files touched. Backend left running :8080. |
+| 2026-10-08 ~23:00 | 3 | `poc/backend`, `auth`+`admin` packages | `JwtService`, filter wired into `SecurityConfig`, `Register/Login/AuthResponse/MeResponse`, `AuthService/Controller`, `AdminService/Controller` (provider queue, verify, disable/enable), `AccessDenied`→403 handler | `mvn test` 19/19 (auth 10, admin 3, errors 6) | **STAGE 3 COMPLETE** with carry-overs noted at the gate. Owner override: frontend HTTP wiring + wire-up tests authorized through stage 7 (tracker backend-only rule lifted by project owner). No React files touched yet. |
 
 ## Final status
 
