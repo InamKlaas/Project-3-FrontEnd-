@@ -1,0 +1,19 @@
+# local mysql for backend dev only. not for production.
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-change-me}
+      MYSQL_DATABASE: cput_home
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - cput-home-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cput-home-mysql:

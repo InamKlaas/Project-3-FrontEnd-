@@ -29,7 +29,7 @@
 | Stage | Scope | Required for POC | Status |
 | --- | --- | --- | --- |
 | 0 | Inspect actual repo + contract freeze | Yes | [x] |
-| 1 | Spring Boot runnable backend + MySQL | Yes | [ ] |
+| 1 | Spring Boot runnable backend + MySQL | Yes | [x] |
 | 2 | Reconcile/reuse existing entity + repository layer | Yes | [ ] |
 | 3 | Auth, role authorization, student/provider identity | Yes | [ ] |
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [ ] |
@@ -209,26 +209,26 @@ Run the existing/reused backend skeleton locally with MySQL and a health endpoin
 
 ### Tasks
 
-- [ ] Reuse the existing Maven application if found. Only scaffold a new Java 21 Spring Boot backend if there is genuinely none accessible.
-- [ ] Keep existing `com.accommodation` packages and working class names where available.
-- [ ] Include only needed dependencies: Web, Validation, Data JPA, Security, MySQL driver, Actuator, tests, optional Flyway and OpenAPI.
-- [ ] Add `application.yml`, `application-dev.yml`, `application-test.yml` with values loaded from environment and no committed secrets.
-- [ ] Add MySQL to a local `compose.dev.yml` (or equivalent) with persisted named volume, test DB and local-only port binding if required.
-- [ ] Configure Hikari pool conservatively for a small demonstration database.
-- [ ] Add `/actuator/health` (public minimal health, no secrets) and Swagger/OpenAPI docs for development.
-- [ ] CORS: configure allowed frontend origin `http://localhost:5173` for local development and explicit deployed frontend origin later; no unconditional `*` with credentials.
-- [ ] Establish consistent errors: `{timestamp,status,code,message,fieldErrors,path}`; use controlled exception advice and HTTP statuses.
-- [ ] Provide `.env.example` with **placeholder names only** and backend README (`./mvnw spring-boot:run`, local MySQL start, tests).
-- [ ] Add `.gitignore` protections for env files, logs, uploaded media, build artifacts and dumps.
+- [x] Reuse the existing Maven application if found. Only scaffold a new Java 21 Spring Boot backend if there is genuinely none accessible.
+- [x] Keep existing `com.accommodation` packages and working class names where available.
+- [x] Include only needed dependencies: Web, Validation, Data JPA, Security, MySQL driver, Actuator, tests, optional Flyway and OpenAPI.
+- [x] Add `application.yml`, `application-dev.yml`, `application-test.yml` with values loaded from environment and no committed secrets.
+- [x] Add MySQL to a local `compose.dev.yml` (or equivalent) with persisted named volume, test DB and local-only port binding if required.
+- [x] Configure Hikari pool conservatively for a small demonstration database.
+- [x] Add `/actuator/health` (public minimal health, no secrets) and Swagger/OpenAPI docs for development.
+- [x] CORS: configure allowed frontend origin `http://localhost:5173` for local development and explicit deployed frontend origin later; no unconditional `*` with credentials.
+- [x] Establish consistent errors: `{timestamp,status,code,message,fieldErrors,path}`; use controlled exception advice and HTTP statuses.
+- [x] Provide `.env.example` with **placeholder names only** and backend README (`./mvnw spring-boot:run`, local MySQL start, tests).
+- [x] Add `.gitignore` protections for env files, logs, uploaded media, build artifacts and dumps.
 
 ### Verification / gate
 
-- [ ] `./mvnw test` passes (or verified equivalent wrapper command).
-- [ ] `./mvnw package` produces a JAR.
-- [ ] Development server connects to local MySQL.
-- [ ] `GET /actuator/health` returns healthy response.
-- [ ] No accidental change to React files.
-- [ ] **STAGE 1 COMPLETE**
+- [x] `./mvnw test` passes (or verified equivalent wrapper command).
+- [x] `./mvnw package` produces a JAR.
+- [x] Development server connects to local MySQL.
+- [x] `GET /actuator/health` returns healthy response.
+- [x] No accidental change to React files.
+- [x] **STAGE 1 COMPLETE**
 
 ---
 
@@ -583,6 +583,7 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | Date/time (SAST) | Stage | Repo/commit | Files changed | Tests/commands | Result or blocker |
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-08 ~21:00 | 0 | `Project-3-FrontEnd-` @ `40b5801`, branch `poc/backend` | tracker copy, `docs/backend/frontend-contract-audit.md`, `docs/backend/poc-scope.md` | read-only frontend inventory; `gh repo view` both repos | **STAGE 0 COMPLETE**. Remote backend domain deleted upstream (`639b691` et al, only skeleton left); Term 2 22-entity report unverifiable → bootstrap minimal `backend/` here. No React files touched. |
+| 2026-10-08 ~21:45 | 1 | `poc/backend`, `backend/` new, package `com.cputhome` | pom (Boot 4.0.6/Java 21 to match team), properties files, common errors/paging/auditing, cors/openapi/jackson/security config, `UserRole`, `compose.dev.yml`, backend README, `.env.example` | `./mvnw test` 5/5, `./mvnw package` ok, dev boot vs local MySQL `cput_home`, `GET /actuator/health` UP | **STAGE 1 COMPLETE**. Deviations: `.properties` (not yml) per owner; fresh `com.cputhome` (nothing reusable upstream). Boot 4 uses Jackson 3 (`tools.jackson`) — dropped legacy `write-dates-as-timestamps` key, explicit v2 mapper bean for error bodies. No React files touched. Backend left running :8080. |
 
 ## Final status
 

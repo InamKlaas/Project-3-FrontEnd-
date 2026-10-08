@@ -2,3 +2,14 @@ node_modules
 dist
 .env
 *.zip
+
+# backend (java)
+target/
+*.class
+*.jar
+backend/.env
+backend/uploads/
+backend/uploads-test/
+uploads/
+*.log
+test-results/
