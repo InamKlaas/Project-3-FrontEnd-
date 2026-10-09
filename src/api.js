@@ -9,7 +9,7 @@ export const STUDENT_DOMAIN = '@mycput.ac.za'
 
 function token() { try { return localStorage.getItem(TOKEN_KEY) } catch { return null } }
 
-async function req(path, { method = 'GET', body, token: explicit, signal } = {}) {
+async function req(path, { method = 'GET', body, token: explicit, signal, binary = false } = {}) {
   const jwt = explicit !== undefined ? explicit : token()
   const controller = new AbortController()
   const abort = () => controller.abort()
@@ -19,10 +19,11 @@ async function req(path, { method = 'GET', body, token: explicit, signal } = {})
   try {
     const res = await fetch(API_BASE + path, {
       method,
-      headers: { 'Content-Type': 'application/json', ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}) },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: { ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}) },
+      body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
       signal: controller.signal,
     })
+    if (binary && res.ok) return await res.blob()
     const text = await res.text()
     let data = null
     try { data = text ? JSON.parse(text) : null } catch { /* a proxy can return an HTML error */ }
@@ -340,37 +341,38 @@ export const API = {
   },
 
   /* ---------- demo-only local store (unchanged behavior) ---------- */
-  favs(email) { return dbGet().favs?.[email] || [] },
-  toggleFav(email, id) { const data = dbGet(); data.favs ??= {}; const ids = (data.favs[email] ??= []); const index = ids.indexOf(+id); index < 0 ? ids.push(+id) : ids.splice(index, 1); dbSet(data) },
+  favs(email) { return [...new Set((dbGet().favs?.[email] || []).map(Number).filter(Number.isFinite))] },
+  toggleFav(email, id) { const data = dbGet(); data.favs ??= {}; const ids = this.favs(email); const index = ids.indexOf(+id); index < 0 ? ids.push(+id) : ids.splice(index, 1); data.favs[email] = ids; dbSet(data) },
   viewings() { return dbGet().viewings || [] },
   requestViewing(listingId, student, date) {
     if (!date) throw new Error('Pick a date and time first.')
     const data = dbGet(); const listing = data.listings.find(item => item.id === +listingId); data.viewings.push({ id: nextId(data.viewings), listingId: +listingId, student, date, status: 'pending' }); appendNotice(data, listing?.owner, `New viewing request for ${listing?.title || 'a listing'}.`, 'viewing'); dbSet(data)
   },
   setViewing(id, status) { const data = dbGet(); const request = data.viewings.find(item => item.id === +id); if (request) { request.status = status; appendNotice(data, request.student, `Your viewing request was ${status}.`, 'viewing') }; dbSet(data) },
-  applications() { return dbGet().applications || [] },
-  submitApplication(application) {
-    const data = dbGet(); if (data.applications.some(item => item.student === application.student && item.listingId === +application.listingId && item.status !== 'declined')) throw new Error('You already have an application for this listing.')
-    const listing = data.listings.find(item => item.id === +application.listingId)
-    const record = { ...application, id: nextId(data.applications), listingId: +application.listingId, status: 'submitted', createdAt: Date.now() }; data.applications.push(record); appendNotice(data, listing?.owner, `A student applied for ${listing?.title || 'a listing'}.`, 'application'); dbSet(data); return record
+  applications(options) { return req('/applications', options) },
+  submitApplication(application) { return req(`/listings/${application.listingId}/applications`, { method: 'POST', body: { note: application.note, moveIn: application.moveIn } }) },
+  setApplication(id, status) { return req(`/applications/${id}/status`, { method: 'POST', body: { status } }) },
+  uploadDocument(id, file) { const body = new FormData(); body.append('file', file); return req(`/applications/${id}/documents`, { method: 'POST', body }) },
+  async downloadDocument(document) {
+    const blob = await req(document.url, { binary: true }); const url = URL.createObjectURL(blob)
+    const a = window.document.createElement('a'); a.href = url; a.download = document.name; a.click(); URL.revokeObjectURL(url)
   },
-  setApplication(id, status) { const data = dbGet(); const item = data.applications.find(application => application.id === +id); if (item) { item.status = status; appendNotice(data, item.student, `Your accommodation application status is now ${status}.`, 'application') }; dbSet(data) },
   leases() { return (dbGet().leases || []).map(lease => new Date(`${lease.endDate}T23:59:59`) < new Date() ? { ...lease, status: 'expired' } : lease) },
   issueLease(lease) { const data = dbGet(); data.leases.push({ ...lease, id: nextId(data.leases), status: 'unsigned', createdAt: Date.now() }); appendNotice(data, lease.student, `A lease is ready for your signature: ${lease.room}.`, 'lease'); dbSet(data) },
   signLease(id, name, signature) { const data = dbGet(); const lease = data.leases.find(item => item.id === +id); if (!lease || new Date(`${lease.endDate}T23:59:59`) < new Date()) throw new Error('This lease has expired and cannot be signed.'); Object.assign(lease, { status: 'signed', signedName: name, signature, signedAt: Date.now() }); appendNotice(data, lease.owner, `${lease.tenant} signed the lease for ${lease.room}.`, 'lease'); dbSet(data) },
-  reports() { return dbGet().reports || [] },
-  reportListing(listingId, reporter, reason) { const data = dbGet(); data.reports.push({ id: nextId(data.reports), listingId: +listingId, reporter, reason, status: 'open', createdAt: Date.now() }); dbSet(data) },
-  resolveReport(id, status) { const data = dbGet(); const report = data.reports.find(item => item.id === +id); if (report) report.status = status; dbSet(data) },
+  reports(options) { return req('/reports', options) },
+  reportListing(listingId, reporter, reason) { return req(`/listings/${listingId}/reports`, { method: 'POST', body: { note: reason } }) },
+  resolveReport(id, status) { return req(`/reports/${id}/status`, { method: 'POST', body: { status } }) },
   onboardProvider(email, details) { const data = dbGet(); const user = data.users.find(item => item.email === email); if (user) Object.assign(user, details, { status: 'pending-verification' }); dbSet(data) },
   notifications(email) { return (dbGet().notifications || []).filter(item => item.email === email || item.email === '*').sort((a, b) => b.at - a.at) },
   markNotificationsRead(email) { const data = dbGet(); data.notifications.forEach(item => { if (item.email === email || item.email === '*') item.read = true }); dbSet(data) },
   announce(text) { const data = dbGet(); data.announcements.push({ id: nextId(data.announcements), text, at: Date.now() }); data.notifications.push({ id: nextId(data.notifications), email: '*', text, kind: 'announcement', read: false, at: Date.now() }); dbSet(data) },
   audit(action, actor) { const data = dbGet(); data.audit.push({ id: nextId(data.audit), action, actor, at: Date.now() }); dbSet(data) },
   auditLog() { return dbGet().audit || [] },
-  canReview(email, listingId) { return this.leases().some(lease => lease.student === email && lease.listingId === +listingId && Boolean(lease.signedAt)) },
-  review(listingId, student, rating, text) { const data = dbGet(); const listing = data.listings.find(item => item.id === +listingId); if (!this.canReview(student, listingId)) throw new Error('A signed lease is required before reviewing.'); if (listing) { listing.reviews ??= []; if (listing.reviews.some(item => item.student === student)) throw new Error('You have already reviewed this listing.'); listing.reviews.push({ student, rating: +rating, text }) }; dbSet(data) },
+  reviews(listingId, options) { return req(`/listings/${listingId}/reviews`, options) },
+  review(listingId, student, rating, text) { return req(`/listings/${listingId}/reviews`, { method: 'POST', body: { rating: +rating, note: text } }) },
   async exportCSV(collection) {
-    const rows = collection === 'applications' ? this.applications() : await this.adminListings()
+    const rows = collection === 'applications' ? await this.applications() : await this.adminListings()
     if (!rows.length) return ''
     const headers = [...new Set(rows.flatMap(row => Object.keys(row)))]; const quote = value => `"${String(value ?? '').replaceAll('"', '""')}"`
     return [headers.map(quote).join(','), ...rows.map(row => headers.map(header => quote(typeof row[header] === 'object' ? JSON.stringify(row[header]) : row[header])).join(','))].join('\r\n')

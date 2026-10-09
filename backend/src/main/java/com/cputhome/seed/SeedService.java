@@ -22,6 +22,8 @@ import com.cputhome.user.UserRole;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Properties;
+import java.io.IOException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,6 +128,7 @@ public class SeedService {
       rooms.save(extra);
     }
 
+    seedCputResidences(verified);
     thread(student, verified);
     return new SeedReport(
         users.count(), accommodations.count(), (int) accommodations.count() - before,
@@ -142,6 +145,33 @@ public class SeedService {
               admin.setStatus(User.UserStatus.VERIFIED);
               return users.save(admin);
             });
+  }
+
+  private void seedCputResidences(User owner) {
+    Properties data = new Properties();
+    try (var source = SeedService.class.getResourceAsStream("/seed/cput-residences.properties")) {
+      if (source == null) throw new IllegalStateException("CPUT residence manifest is missing");
+      data.load(source);
+    } catch (IOException error) { throw new IllegalStateException("cannot load residence manifest", error); }
+    int index = 0;
+    for (String key : data.getProperty("residences").split(",")) {
+      String title = data.getProperty(key + ".title");
+      if (accommodations.existsByTitle(title)) continue;
+      Accommodation home = new Accommodation(owner, title,
+          "Real residence featured in CPUT's official virtual-tour directory. Photos: CPUT / Kuula. "
+              + "Monthly rent and availability shown here are development examples, not official offers. "
+              + "Official tour: " + data.getProperty(key + ".tour"),
+          data.getProperty(key + ".location"), "Cape Town / District Six");
+      home.setAddress("Confirm the current street address with CPUT Student Housing.");
+      home.setImageUrls(List.of(data.getProperty(key + ".photos").split(",")));
+      home.setAmenities(List.of("Laundry", "Security"));
+      home.setHouseRules("Confirm the current residence rules with CPUT Student Housing.");
+      home.setShuttle("Consult CPUT's current shuttle timetable.");
+      home.setPublished(true); home.setApprovalStatus("approved"); home.setSample(true);
+      accommodations.save(home);
+      addRoom(home, room(RoomListing.RoomType.PRIVATE_ROOM, 3200 + index++ * 250, true, LocalDate.now().toString(), false));
+      attachSubtype(home);
+    }
   }
 
   private User landlord(String email, String name, boolean verified) {

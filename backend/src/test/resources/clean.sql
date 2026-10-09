@@ -1,3 +1,5 @@
+DELETE FROM application_documents;
+DELETE FROM housing_entries;
 DELETE FROM messages;
 DELETE FROM moderation_decisions;
 DELETE FROM shared_accommodations;

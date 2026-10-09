@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useAsyncResource } from '../hooks/useAsyncResource.js'
 import ListingCard from '../components/ListingCard.jsx'
 import DeferredFeature from '../components/DeferredFeature.jsx'
+import ApplicationsInbox from '../components/ApplicationsInbox.jsx'
 
 export default function MyStuff() {
   const { user } = useAuth()
@@ -21,7 +22,7 @@ export default function MyStuff() {
     {!loading && !error && <div className="grid">{saved?.map(listing => <ListingCard key={listing.id} l={listing} user={user} fav onFav={id => { API.toggleFav(user.email, id); tick(value => value + 1) }} />)}</div>}
     {!loading && !error && !saved?.length && <p className="muted">No saved listings yet.</p>}
     <DeferredFeature title="Viewing requests" />
-    <DeferredFeature title="Application tracker" />
+    <ApplicationsInbox />
     <DeferredFeature title="Leases" />
   </>
 }

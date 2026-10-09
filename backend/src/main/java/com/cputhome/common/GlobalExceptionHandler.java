@@ -55,6 +55,12 @@ public class GlobalExceptionHandler {
     return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "authentication required", null, request);
   }
 
+  /* multipart size failures use the same API error shape */
+  @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+  public ResponseEntity<ApiErrorResponse> handleLargeUpload(Exception ex, HttpServletRequest request) {
+    return error(HttpStatus.BAD_REQUEST, "FILE_SIZE", "documents must not exceed 5 MB", null, request);
+  }
+
   /* generic server error does not expose internal exception details */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiErrorResponse> handleUnknown(Exception ex, HttpServletRequest request) {

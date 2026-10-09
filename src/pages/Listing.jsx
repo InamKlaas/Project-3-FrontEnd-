@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { money } from '../components/ListingCard.jsx'
 import { useAsyncResource } from '../hooks/useAsyncResource.js'
 import DeferredFeature from '../components/DeferredFeature.jsx'
+import HousingActions from '../components/HousingActions.jsx'
 
 export default function Listing() {
   const { id } = useParams()
@@ -36,7 +37,7 @@ export default function Listing() {
     <Link to="/">← Browse residences</Link>
     <div className="detail-grid">
       <section className="panel listing-detail">
-        <div className="gallery"><div className="photo-placeholder">{activePhoto ? <img src={activePhoto} alt={`${listing.title} residence view ${photoIndex + 1}`} /> : <span aria-hidden="true">⌂</span>}</div><div className="sample-stamp">{listing.sample ? 'Illustration · sample data' : 'Provider photo'}</div>
+        <div className="gallery"><div className="photo-placeholder">{activePhoto ? <img src={activePhoto} alt={`${listing.title} residence view ${photoIndex + 1}`} /> : <span aria-hidden="true">⌂</span>}</div><div className="sample-stamp">{activePhoto?.includes('files.kuula.io') ? 'CPUT / Kuula · official tour photo' : listing.sample ? 'Illustration · sample data' : 'Provider photo'}</div>
           {photos.length > 1 && <div className="gallery-thumbs" aria-label="Residence images">{photos.map((photo, index) => <button type="button" key={`${photo}-${index}`} className={`gallery-thumb ${photoIndex === index ? 'selected' : ''}`} onClick={() => setPhotoIndex(index)} aria-label={`Show residence image ${index + 1}`} aria-pressed={photoIndex === index}><img src={photo} alt="" /></button>)}</div>}
         </div>
         <div className="detail-heading"><div><span className={`badge ${listing.emergency ? 'em' : ''}`}>{listing.emergency ? 'Emergency room offered' : listing.type}</span> <span className={`badge ${listing.nsfas ? 'ok' : 'pend'}`}>{listing.nsfas ? 'NSFAS claimed' : 'Accreditation unverified'}</span>
@@ -62,9 +63,7 @@ export default function Listing() {
         {note && <p role="alert" className="err">{note}</p>}
       </div>
       <DeferredFeature title="Request a viewing" />
-      <DeferredFeature title="Apply for this room">Applications and document uploads are not collected here.</DeferredFeature>
-      <DeferredFeature title="Report a concern" />
-      <DeferredFeature title="Leave a review" />
+      <HousingActions listing={listing} user={user} />
     </>}
   </>
 }

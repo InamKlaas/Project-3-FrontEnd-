@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --page: #f4f7f4;
   --paper: #ffffff;
   --ink: #172623;
@@ -14,8 +14,8 @@
   --gold-pale: #f6edcf;
   --radius: 5px;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
+:root[data-theme="dark"] {
+    color-scheme: dark;
     --page: #121b19;
     --paper: #1c2926;
     --ink: #e6efeb;
@@ -28,8 +28,12 @@
     --coral-pale: #482c28;
     --gold: #f1d079;
     --gold-pale: #40391f;
-  }
 }
+.application-row, .review { padding: 1rem 0; border-bottom: 1px solid var(--line); }
+.housing-actions form { display: grid; gap: .75rem; }
+.housing-actions form .btn { justify-self: start; }
+:root[data-theme="dark"] .role-banner { background-color: var(--paper); }
+:root[data-theme="dark"] .btn:not(.alt), :root[data-theme="dark"] .badge.ok, :root[data-theme="dark"] .msg.me { color: #10231c; }
 * { box-sizing: border-box; }
 html { min-width: 320px; }
 body {

@@ -39,7 +39,7 @@ export default function Home() {
     <>
       <section className="hero"><h1>Find a place to call home</h1>
         <p>Explore student accommodation around CPUT campuses. Verify details before paying.</p></section>
-      <div className="sample-notice"><strong>Sample data for a student project.</strong> Names, prices, availability, accreditation and provider details are illustrative and must be verified against CPUT's official list. CPUT Home is not an official CPUT service.</div>
+      <div className="sample-notice"><strong>Explore real CPUT residences.</strong> The new CPUT residence names and photos come from its official virtual tours. Prices, availability and provider accounts are development examples. <a href="https://www.cput.ac.za/student/support-services/dsa/residence/view-residences-in-360" target="_blank" rel="noreferrer">View CPUT's official directory</a>.</div>
       <div className="alert"><span>🚨 <b>Arrived without a place?</b> See rooms available right now.</span>
         <button className="btn red sm" onClick={() => { setF({ ...f, em: '1' }); setPage(0) }}>Show emergency rooms</button></div>
       <div className="filters">

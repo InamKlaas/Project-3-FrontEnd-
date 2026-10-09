@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { money } from '../components/ListingCard.jsx'
 import { useAsyncResource } from '../hooks/useAsyncResource.js'
 import DeferredFeature from '../components/DeferredFeature.jsx'
+import ApplicationsInbox from '../components/ApplicationsInbox.jsx'
 
 const blank = { title: '', price: '', location: 'Bellville', address: '', campus: 'Bellville', type: 'Single', photos: '', desc: '', emergency: false, available: true, availableDate: '', onCampus: false, nsfas: false, gender: 'Any', beds: 1, deposit: '', utilities: '', amenities: [], houseRules: '', shuttle: '' }
 
@@ -66,7 +67,7 @@ export default function Dashboard() {
         <button disabled={busy} className={`btn ${listing.active ? 'red' : 'alt'} sm`} onClick={() => { if (!listing.active) act(() => API.updateListing(listing.id, { active: true }), 'Listing reactivated.'); else if (window.confirm('Deactivate this listing?')) act(() => API.removeListing(listing.id), 'Listing deactivated.') }}>{listing.active ? 'Deactivate' : 'Reactivate'}</button>
       </div></td></tr>)}</tbody></table>{!loading && !error && !mine.length && <p className="muted">No residences yet.</p>}</section>
     </>}
-    {tab === 'applications' && <DeferredFeature title="Applications inbox" />}
+    {tab === 'applications' && <ApplicationsInbox />}
     {tab === 'viewings' && <DeferredFeature title="Viewing requests" />}
     {tab === 'leases' && <DeferredFeature title="Lease tracker" />}
     {note && <p role="status" className="status-note">{note}</p>}

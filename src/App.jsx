@@ -9,6 +9,7 @@ import Admin from './pages/Admin.jsx'
 import MyStuff from './pages/MyStuff.jsx'
 import Notifications from './pages/Notifications.jsx'
 import Privacy from './pages/Privacy.jsx'
+import ThemeToggle from './components/ThemeToggle.jsx'
 
 export default function App() {
   const { user, ready, error, retry, logout } = useAuth()
@@ -19,6 +20,7 @@ export default function App() {
       <header className="nav">
         <Link to="/" className="logo">🏠 CPUT<span>Home</span></Link>
         <nav>
+          <ThemeToggle />
           <NavLink to="/">Browse</NavLink>
           <NavLink to="/?emergency=1">🚨 Emergency</NavLink>
           {!user && <><NavLink to="/login">Login</NavLink><Link className="btn sm" to="/register">Sign up</Link></>}
