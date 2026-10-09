@@ -34,6 +34,7 @@ public class ListingController {
 
   @GetMapping
   public PageResponse<ListingCardDto> browse(
+      @AuthenticationPrincipal UserPrincipal principal,
       @RequestParam(required = false) String search,
       @RequestParam(required = false) String campus,
       @RequestParam(required = false) String type,
@@ -53,7 +54,7 @@ public class ListingController {
         new ListingFilter(
             search, campus, type, minPrice, maxPrice, availableBy, emergency, onCampus,
             nsfas, gender, amenity, null, sort),
-        pageable);
+        pageable, principal);
   }
 
   @GetMapping("/{id}")

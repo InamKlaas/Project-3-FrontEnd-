@@ -1,0 +1,12 @@
+DELETE FROM messages;
+DELETE FROM moderation_decisions;
+DELETE FROM shared_accommodations;
+DELETE FROM private_rooms;
+DELETE FROM entire_units;
+DELETE FROM room_listings;
+DELETE FROM accommodation_images;
+DELETE FROM accommodation_amenities;
+DELETE FROM accommodations;
+DELETE FROM student_profiles;
+DELETE FROM landlord_profiles;
+DELETE FROM users;

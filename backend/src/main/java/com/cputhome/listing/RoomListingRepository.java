@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface RoomListingRepository extends JpaRepository<RoomListing, Long> {
 
   List<RoomListing> findByAccommodationIdOrderByMonthlyRentAsc(Long accommodationId);
+
+  void deleteByAccommodationId(Long accommodationId);
 }

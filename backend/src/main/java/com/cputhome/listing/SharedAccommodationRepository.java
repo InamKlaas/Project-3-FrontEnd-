@@ -3,4 +3,7 @@ package com.cputhome.listing;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /* persistence only, subtype rows are written at creation */
-public interface SharedAccommodationRepository extends JpaRepository<SharedAccommodation, Long> {}
+public interface SharedAccommodationRepository extends JpaRepository<SharedAccommodation, Long> {
+
+  void deleteByAccommodationId(Long accommodationId);
+}

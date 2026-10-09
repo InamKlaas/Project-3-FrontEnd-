@@ -1,73 +1,89 @@
-# CPUT Home
+# CPUT Home — stage-7 POC
 
-Student accommodation marketplace frontend for the CPUT PRT362S group project. This is an independent student prototype, not a CPUT service. Residence names are sample references; prices, availability, accreditation, and provider details are invented demonstration data and must be verified against CPUT's official information before use.
+Student accommodation platform for the CPUT PRT362S group project. The existing React UI now connects to a Java 21 / Spring Boot 4.0.6 / MySQL backend through `/api`.
 
-## Run locally
+This is an independent student prototype, not an official CPUT service. Seed names, addresses, prices, availability and accreditation claims are synthetic demonstration data.
 
-Requirements: Node.js 18 or newer and npm.
+## Start locally
+
+Requirements: Node.js 20+ (verified with 22.16.0), Java 21, Maven 3.9+ (or the included Maven wrapper), and MySQL 8 running locally.
+
+### 1. Backend
+
+From `backend/`, set the database password in the process environment, then run the dev profile. Flyway creates/validates the schema; the dev-only seed adds 11 properties, five accounts and a two-message thread without duplicating them or overwriting verification decisions.
+
+PowerShell:
+
+```powershell
+$env:DB_PASSWORD = 'your-local-mysql-password'
+mvn spring-boot:run "-Dspring-boot.run.profiles=dev"
+```
+
+macOS/Linux:
 
 ```sh
-npm install
+export DB_PASSWORD='your-local-mysql-password'
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Defaults: database `cput_home`, MySQL user `root`, API port `8080`. Set `DB_URL` and `DB_USERNAME` for a different local database/user. `backend/.env.example` lists supported environment variables; Spring does not automatically load a `.env` file.
+
+Health: `http://localhost:8080/actuator/health`. Swagger: `http://localhost:8080/swagger-ui.html`.
+
+### 2. Frontend
+
+From the repository root, in a second terminal:
+
+```sh
+npm ci
 npm run dev
 ```
 
-Open the local URL Vite prints, normally `http://localhost:5173`. Create a production bundle with `npm run build`; preview that bundle using `npm run preview`.
+Open **http://localhost:5173**. `VITE_API_URL` defaults to `http://localhost:8080/api`; the root `.env.example` is a template for a custom API URL. CORS permits `http://localhost:5173` by default.
 
-## Demo accounts
+## Development-only accounts
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Student | `220000001@mycput.ac.za` | `demo123` |
-| Landlord / provider | `landlord@demo.com` | `demo123` |
-| Admin | `admin@cputhome.co.za` | `admin123` |
+All five seeded accounts use **`SeedDemo123!`**, only in the local `dev` profile.
 
-New student accounts must use `@mycput.ac.za`. Registration presents a simulated email confirmation; no email is actually sent. The landlord verification screen and admin actions are also local simulations.
+| Role | Email |
+| --- | --- |
+| Student | `220001001@mycput.ac.za` |
+| Student | `220001002@mycput.ac.za` |
+| Verified landlord | `verified-landlord@seed.local` |
+| Pending landlord | `pending-landlord@seed.local` |
+| Admin | `admin@seed.local` |
 
-## Included workflows
+New students must use `@mycput.ac.za`. Email delivery/verification is deferred: there is no simulated confirmation button and no email-only approval endpoint. Newly registered students remain `pending-email` but can browse/message for this POC. New landlords need admin verification before creating a listing.
 
-- Browse seeded sample residences, emergency rooms, and filters for campus, price, setting, room type, gender, NSFAS claim, amenities, availability, and sort order.
-- Residence detail galleries use original local SVG illustrations in `public/images`; students can switch between exterior, room, and shared-space views. Provider listings support multiple uploaded photos.
-- Student registration/profile, saved listings, messages, viewing requests, application tracker, application document inputs, notifications, reviews, reporting, and lease signature/print flow.
-- Provider verification submission, listing management, viewing and application inboxes, application decisions, and lease issuance.
-- Admin listing/provider verification, accreditation controls, reports, user suspension/removal, announcements, audit log, simple analytics, and CSV exports.
-- Local POPIA-style data export and deletion controls.
+## Wired workflows
 
-## Data and security limitations
+- Public search uses server-side filters, deterministic sorting and pagination. Emergency/type/budget filters project the cheapest **matching available room**, rather than a different room in the property.
+- Guests receive limited previews from the API. Signed-in students receive full details and can start a persistent conversation.
+- Providers see their own pending/approved/rejected/inactive listings; create, rename, reprice, change availability, deactivate and reactivate.
+- Admins verify providers, approve/reject listings, toggle a demo accreditation flag and enable/disable/remove accounts. Core moderation decisions record actor, timestamp and reason in MySQL.
+- Landlord replies and student messages use authorized, persistent REST threads; use **Refresh messages** to fetch incoming replies.
+- Login sessions restore from `/auth/me`; failed requests have visible retry states. JWTs expire after 24 hours by default and are stored in browser localStorage for this POC. Logout removes the local token; it does not revoke already-issued JWTs.
 
-All mock data operations are centralized in `src/api.js`. Data persists in browser `localStorage` under `cputhome_v2`; clear that key in browser developer tools to reset the demo. Uploaded files and drawn signatures are stored as base64 strings in localStorage. Do not upload real identity, registration, funding, or ownership documents. This prototype has no backend authorization, encryption, secure upload, real email verification, or legal lease review. Client-side route guards are a UX feature, not a security boundary. User text renders as React text, not injected HTML.
+Saved IDs remain browser-only. Viewing requests, applications/documents, leases/signatures, reviews, reports, notifications, announcements and server privacy export/deletion are deferred and labelled in the UI. Photo inputs accept HTTP(S) URLs or existing `/images/` references; file upload/storage is deferred.
 
-## Spring Boot endpoint contract
+## Verification
 
-Replace the corresponding methods in `src/api.js` with calls to these endpoints. The exact request/response DTOs and authentication scheme should be agreed with the backend team. Use server-side role checks, validation, authorization, and secure document storage.
+Backend (from `backend/`, H2 test profile):
 
-| Frontend operation | Suggested endpoint | Purpose |
-| --- | --- | --- |
-| `login`, `register`, `confirmEmail`, `me`, `logout` | `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/auth/verify-email`, `GET /api/auth/me`, `POST /api/auth/logout` | Authentication, CPUT email confirmation, session |
-| `listings`, `approved` | `GET /api/listings?campus=&minPrice=&maxPrice=&roomType=&available=&emergency=&nsfas=&amenities=&sort=` | Search and filtered listing results |
-| `listing` | `GET /api/listings/{listingId}` | Full listing details, provider, reviews |
-| `addListing`, `updateListing`, `removeListing` | `POST /api/listings`, `PATCH /api/listings/{listingId}`, `DELETE /api/listings/{listingId}` | Provider listing management |
-| Admin listing verification | `GET /api/admin/listings?status=pending`, `POST /api/admin/listings/{listingId}/approve`, `POST /api/admin/listings/{listingId}/reject` | Approve or reject with a reason |
-| `favs`, `toggleFav` | `GET /api/students/me/favorites`, `PUT /api/students/me/favorites/{listingId}` | Student saved listings |
-| `requestViewing`, `viewings`, `setViewing` | `POST /api/listings/{listingId}/viewings`, `GET /api/viewings/me`, `PATCH /api/viewings/{viewingId}` | Request, list, and decide viewings |
-| `send`, `thread`, `threadsFor` | `POST /api/listings/{listingId}/messages`, `GET /api/conversations`, `GET /api/listings/{listingId}/messages?studentId=` | On-platform messaging |
-| `submitApplication`, `applications`, `setApplication` | `POST /api/listings/{listingId}/applications` (multipart), `GET /api/applications/me`, `PATCH /api/applications/{applicationId}` | Applications, documents, provider decisions |
-| `issueLease`, `leases`, `signLease` | `POST /api/leases`, `GET /api/leases/me`, `POST /api/leases/{leaseId}/sign` | Generate, view, and sign leases |
-| `reportListing`, `reports`, `resolveReport` | `POST /api/listings/{listingId}/reports`, `GET /api/admin/reports`, `PATCH /api/admin/reports/{reportId}` | Fraud/misleading-listing moderation |
-| `onboardProvider`, `setAccreditation` | `POST /api/providers/me/verification` (multipart), `PATCH /api/admin/providers/{providerId}/accreditation` | Provider identity/ownership and accreditation |
-| `notifications`, `markNotificationsRead` | `GET /api/notifications`, `PATCH /api/notifications/read` | In-app notifications |
-| `users`, `setUserStatus`, `removeUser` | `GET /api/admin/users`, `PATCH /api/admin/users/{userId}`, `DELETE /api/admin/users/{userId}` | Account management |
-| `announce`, `auditLog` | `POST /api/admin/announcements`, `GET /api/admin/audit` | Announcements and immutable audit history |
-| Analytics | `GET /api/admin/analytics` | Listings by campus, applications over time, emergency count |
-| CSV export | `GET /api/admin/exports/listings.csv`, `GET /api/admin/exports/applications.csv` | Server-generated CSV downloads |
-| `exportMyData`, `deleteMyData` | `GET /api/privacy/export`, `DELETE /api/privacy/me` | Data access and account/data deletion requests |
+```sh
+mvn verify
+```
 
-## Simplifications
+Frontend (root; MySQL/dev backend must already be running for browser tests):
 
-- Email confirmation is a button; there is no mail provider or confirmation token.
-- Listings and providers are seeded local sample data. The prototype cannot certify CPUT ownership or accreditation.
-- Seeded residence addresses show only a sample area; exact street addresses are not invented. Providers can enter an address for their own listing.
-- Lease generation uses a short demo template; signatures are a local typed name and canvas image, not a legally vetted e-signature.
-- Documents are base64/localStorage records, with no file-size, malware, encryption, or access-control service.
-- Notifications are local in-app records; there is no push or email delivery.
-- Analytics are computed from browser seed/demo records; charts use CSS, not a chart library.
-- Authentication stores demo credentials in browser data; never use real passwords with this mock API.
+```sh
+npm run build
+npx playwright install chromium
+npm test
+```
+
+The browser suite drives the actual frontend and MySQL API, including registration → provider verification → listing approval → chat/reply → reload → rent re-review. It cleans up its successfully created synthetic accounts and properties. The failure-recovery test intentionally interrupts a request.
+
+Verified results and limitations are in [the stage-7 evidence](docs/backend/stage-7-evidence.md). API reference: [OpenAPI](docs/backend/openapi.json), [HTTP requests](docs/backend/cput-home-poc.http), [integration guide](docs/backend/frontend-integration.md), [10-step demo](docs/backend/poc-demo-script.md).
+
+With the current dev API running, regenerate the specification using `npm run docs:openapi`. Azure deployment is deferred by the owner's stage-7 stop line.

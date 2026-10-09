@@ -155,13 +155,12 @@ public class SeedService {
                       verified ? User.UserStatus.VERIFIED : User.UserStatus.PENDING_VERIFICATION);
                   return users.save(created);
                 });
-    LandlordProfile profile =
-        landlords.findByUserId(user.getId()).orElseGet(() -> landlords.save(new LandlordProfile(user)));
-    profile.setVerificationStatus(
-        verified
-            ? LandlordProfile.VerificationStatus.VERIFIED
-            : LandlordProfile.VerificationStatus.PENDING);
-    landlords.save(profile);
+    landlords.findByUserId(user.getId()).orElseGet(() -> {
+      LandlordProfile profile = new LandlordProfile(user);
+      profile.setVerificationStatus(verified ? LandlordProfile.VerificationStatus.VERIFIED
+          : LandlordProfile.VerificationStatus.PENDING);
+      return landlords.save(profile);
+    });
     return user;
   }
 

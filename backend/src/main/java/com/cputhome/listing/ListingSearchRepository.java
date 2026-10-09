@@ -2,7 +2,6 @@ package com.cputhome.listing;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -37,8 +36,7 @@ public class ListingSearchRepository {
     predicates.add(visibility);
     predicates.add(roomMatch);
     query.where(predicates.toArray(new Predicate[0]));
-    query.orderBy(order(filter.sort(), cb, query, root));
-    query.distinct(true);
+    query.orderBy(order(filter, cb, query, root));
 
     List<Accommodation> content =
         entities.createQuery(query).setFirstResult((int) pageable.getOffset())
@@ -60,7 +58,8 @@ public class ListingSearchRepository {
     return cb.and(
         cb.isTrue(root.get("published")),
         cb.isTrue(root.get("active")),
-        cb.equal(root.get("approvalStatus"), "approved"));
+        cb.equal(root.get("approvalStatus"), "approved"),
+        cb.isTrue(root.get("owner").get("enabled")));
   }
 
   private List<Predicate> propertyPredicates(
@@ -86,8 +85,7 @@ public class ListingSearchRepository {
       predicates.add(cb.equal(root.get("gender"), filter.gender().trim()));
     }
     if (filter.amenity() != null && !filter.amenity().isBlank()) {
-      var amenities = root.joinList("amenities", JoinType.INNER);
-      predicates.add(cb.equal(amenities, filter.amenity().trim()));
+      predicates.add(cb.isMember(filter.amenity().trim(), root.get("amenities")));
     }
     return predicates;
   }
@@ -97,6 +95,13 @@ public class ListingSearchRepository {
       CriteriaBuilder cb, CriteriaQuery<?> query, Root<Accommodation> root, ListingFilter filter) {
     Subquery<Long> exists = query.subquery(Long.class);
     var room = exists.from(RoomListing.class);
+    List<Predicate> roomPredicates = matchingPredicates(cb, room, root, filter);
+    exists.select(cb.literal(1L)).where(roomPredicates.toArray(new Predicate[0]));
+    return cb.exists(exists);
+  }
+
+  private List<Predicate> matchingPredicates(
+      CriteriaBuilder cb, Root<RoomListing> room, Root<Accommodation> root, ListingFilter filter) {
     List<Predicate> roomPredicates = new ArrayList<>();
     roomPredicates.add(cb.equal(room.get("accommodation").get("id"), root.get("id")));
     roomPredicates.add(cb.isTrue(room.get("available")));
@@ -119,25 +124,24 @@ public class ListingSearchRepository {
       /* the flag alone never qualifies, availability rides along */
       roomPredicates.add(cb.isTrue(room.get("emergency")));
     }
-    exists.select(cb.literal(1L)).where(roomPredicates.toArray(new Predicate[0]));
-    return cb.exists(exists);
+    return roomPredicates;
   }
 
   /* newest, cheapest, priciest, or emergency-first — deterministic ties by id */
   private List<jakarta.persistence.criteria.Order> order(
-      String sort, CriteriaBuilder cb, CriteriaQuery<Accommodation> query, Root<Accommodation> root) {
-    String mode = sort == null ? "priority" : sort.trim().toLowerCase(java.util.Locale.ROOT);
+      ListingFilter filter, CriteriaBuilder cb, CriteriaQuery<Accommodation> query, Root<Accommodation> root) {
+    String mode = filter.sort() == null ? "priority" : filter.sort().trim().toLowerCase(java.util.Locale.ROOT);
     return switch (mode) {
       case "price-low" ->
-          List.of(cb.asc(minRent(cb, query, root)), cb.desc(root.get("id")));
+          List.of(cb.asc(minRent(cb, query, root, filter)), cb.desc(root.get("id")));
       case "price-high" ->
-          List.of(cb.desc(minRent(cb, query, root)), cb.desc(root.get("id")));
+          List.of(cb.desc(minRent(cb, query, root, filter)), cb.desc(root.get("id")));
       case "newest" -> List.of(cb.desc(root.get("id")));
       default ->
           List.of(
               cb.desc(
                   cb.selectCase()
-                      .when(cb.exists(emergencyRoom(cb, query, root)), 1)
+                       .when(cb.exists(emergencyRoom(cb, query, root, filter)), 1)
                       .otherwise(0)),
               cb.desc(root.get("id")));
     };
@@ -145,24 +149,21 @@ public class ListingSearchRepository {
 
   /* starting rent = cheapest room, the same number the card shows */
   private jakarta.persistence.criteria.Expression<BigDecimal> minRent(
-      CriteriaBuilder cb, CriteriaQuery<Accommodation> query, Root<Accommodation> root) {
+      CriteriaBuilder cb, CriteriaQuery<Accommodation> query, Root<Accommodation> root, ListingFilter filter) {
     Subquery<BigDecimal> min = query.subquery(BigDecimal.class);
     var room = min.from(RoomListing.class);
     min.select(cb.min(room.get("monthlyRent")))
-        .where(cb.equal(room.get("accommodation").get("id"), root.get("id")));
+        .where(matchingPredicates(cb, room, root, filter).toArray(new Predicate[0]));
     return min;
   }
 
   private Subquery<Long> emergencyRoom(
-      CriteriaBuilder cb, CriteriaQuery<Accommodation> query, Root<Accommodation> root) {
+      CriteriaBuilder cb, CriteriaQuery<Accommodation> query, Root<Accommodation> root, ListingFilter filter) {
     Subquery<Long> exists = query.subquery(Long.class);
     var room = exists.from(RoomListing.class);
-    exists
-        .select(cb.literal(1L))
-        .where(
-            cb.equal(room.get("accommodation").get("id"), root.get("id")),
-            cb.isTrue(room.get("available")),
-            cb.isTrue(room.get("emergency")));
+    List<Predicate> predicates = matchingPredicates(cb, room, root, filter);
+    predicates.add(cb.isTrue(room.get("emergency")));
+    exists.select(cb.literal(1L)).where(predicates.toArray(new Predicate[0]));
     return exists;
   }
 

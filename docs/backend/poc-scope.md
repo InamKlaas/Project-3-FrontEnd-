@@ -16,17 +16,18 @@ The Term 2 report (`TERM 2 -IND.docx`) describing 22 entities, factories
 and five repositories is treated as previously described work, not proof of
 present files. Package is `com.cputhome` (fresh), not `com.accommodation`.
 
-## POC stop line (stages 0–8 only)
+## Current POC stop line (stages 0–7, owner override)
 
 Auth (student `@mycput.ac.za` rule, landlord pending verification, seeded
 admin), accommodation + room listings with admin approve/reject and
 landlord activate/deactivate, public search with emergency priority,
 student↔landlord messaging over REST polling, deterministic seed, tests,
-contract docs, Azure VM deploy + handover.
+contract docs and frontend HTTP wiring with browser wire-up tests. The owner lifted the backend-only restriction and deferred Azure stage 8.
 
-Explicitly out: viewings, favourites, notifications feed, applications,
-leases/signatures, reviews, reports moderation, analytics/exports, privacy
-tools, announcements, OAuth, payments, frontend async rewrite (separate PR).
+Deferred server workflows: viewings, favourites, notifications, applications/documents,
+leases/signatures, reviews, reports, full analytics/exports, privacy tooling,
+announcements, OAuth and payments. Saved IDs remain browser-only; basic existing
+admin controls and listing CSV use real POC feeds.
 
 ## Conflicts recorded before code
 

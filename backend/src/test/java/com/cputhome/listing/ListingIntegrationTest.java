@@ -32,6 +32,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.test.context.jdbc.Sql("/clean.sql")
 class ListingIntegrationTest {
 
   @Autowired MockMvc mvc;
@@ -45,6 +46,7 @@ class ListingIntegrationTest {
   @Autowired PrivateRoomRepository privates;
   @Autowired EntireUnitRepository units;
   @Autowired PasswordEncoder passwords;
+  @Autowired com.cputhome.admin.ModerationDecisionRepository decisions;
 
   private String adminToken;
   private String landlordToken;
@@ -110,7 +112,8 @@ class ListingIntegrationTest {
   private Map<String, Object> listingBody(String title, String type, String price) {
     return Map.of(
         "title", title,
-        "description", "decent place near campus",
+        "description", "decent place near campus. This synthetic description is deliberately longer than ninety characters to check the server-side guest preview.",
+        "address", "Synthetic test-only address",
         "location", "Bellville",
         "campus", "Bellville",
         "rooms", List.of(Map.of("roomType", type, "monthlyRent", new BigDecimal(price), "beds", 1)));
@@ -185,8 +188,12 @@ class ListingIntegrationTest {
             patch("/api/listings/" + id)
                 .header("Authorization", "Bearer " + landlordToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(Map.of("title", "Owned House"))))
-        .andExpect(status().isOk());
+                .content(mapper.writeValueAsString(Map.of("title", "Owned House", "status", "approved",
+                    "owner", "s4fresh@test.co.za", "role", "ADMIN", "published", true))))
+        .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(200, 400));
+    mvc.perform(get("/api/listings/" + id).header("Authorization", "Bearer " + landlordToken))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.owner").value("s4owner@test.co.za"))
+        .andExpect(jsonPath("$.status").value("pending"));
     assertThat(publicCount("")).isEqualTo(0);
   }
 
@@ -201,6 +208,14 @@ class ListingIntegrationTest {
     mvc.perform(delete("/api/listings/" + id).header("Authorization", "Bearer " + landlordToken))
         .andExpect(status().isNoContent());
     assertThat(publicCount("")).isEqualTo(0);
+    mvc.perform(patch("/api/listings/" + id).header("Authorization", "Bearer " + landlordToken)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"active\":true}"))
+        .andExpect(status().isOk());
+    assertThat(publicCount("")).isEqualTo(1);
+    mvc.perform(post("/api/admin/listings/" + id + "/unpublish").header("Authorization", "Bearer " + adminToken))
+        .andExpect(status().isNoContent());
+    assertThat(publicCount("")).isEqualTo(0);
+    assertThat(accommodations.findById(id).orElseThrow().isActive()).isTrue();
   }
 
   @Test
@@ -248,6 +263,31 @@ class ListingIntegrationTest {
   }
 
   @Test
+  void availabilityToggleHidesAndReturns() throws Exception {
+    JsonNode created = create(landlordToken, "Toggle House", "Single", "3000");
+    long id = created.get("id").asLong();
+    approve(id);
+    assertThat(publicCount("")).isEqualTo(1);
+
+    mvc.perform(
+            patch("/api/listings/" + id)
+                .header("Authorization", "Bearer " + landlordToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("available", false))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.available").value(false));
+    assertThat(publicCount("")).isEqualTo(0);
+
+    mvc.perform(
+            patch("/api/listings/" + id)
+                .header("Authorization", "Bearer " + landlordToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(Map.of("available", true))))
+        .andExpect(status().isOk());
+    assertThat(publicCount("")).isEqualTo(1);
+  }
+
+  @Test
   void emergencyNeedsRealAvailability() throws Exception {
     JsonNode created = create(landlordToken, "Urgent Room", "Single", "2500");
     long id = created.get("id").asLong();
@@ -280,6 +320,10 @@ class ListingIntegrationTest {
     long sosId = mapper.readTree(sos.getResponse().getContentAsString()).get("id").asLong();
     approve(sosId);
     assertThat(publicCount("?emergency=true")).isEqualTo(1);
+    mvc.perform(patch("/api/listings/" + sosId).header("Authorization", "Bearer " + landlordToken)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"available\":false}"))
+        .andExpect(status().isOk());
+    assertThat(publicCount("?emergency=true")).isZero();
   }
 
   @Test
@@ -292,6 +336,10 @@ class ListingIntegrationTest {
         mvc.perform(get("/api/listings/" + id)).andExpect(status().isOk()).andReturn();
     JsonNode guestView = mapper.readTree(guest.getResponse().getContentAsString());
     assertThat(guestView.get("address").isNull()).isTrue();
+    assertThat(guestView.get("owner").isNull()).isTrue();
+    assertThat(guestView.get("desc").asText().length()).isLessThanOrEqualTo(91);
+    mvc.perform(get("/api/listings")).andExpect(status().isOk())
+        .andExpect(jsonPath("$.content[0].address").isEmpty());
 
     MvcResult authed =
         mvc.perform(get("/api/listings/" + id).header("Authorization", "Bearer " + studentToken))
@@ -299,5 +347,45 @@ class ListingIntegrationTest {
             .andReturn();
     assertThat(mapper.readTree(authed.getResponse().getContentAsString()).get("desc").asText())
         .contains("decent place");
+    assertThat(mapper.readTree(authed.getResponse().getContentAsString()).get("address").asText())
+        .isEqualTo("Synthetic test-only address");
+  }
+
+  @Test
+  void multiRoomSearchProjectsAndSortsTheMatchingAvailableRoom() throws Exception {
+    var body = new java.util.HashMap<>(listingBody("Mixed House", "Single", "3000"));
+    body.put("rooms", List.of(
+        Map.of("roomType", "Single", "monthlyRent", 500, "available", false, "emergency", true),
+        Map.of("roomType", "Sharing", "monthlyRent", 1900),
+        Map.of("roomType", "Single", "monthlyRent", 2900, "emergency", true)));
+    var result = mvc.perform(post("/api/listings").header("Authorization", "Bearer " + landlordToken)
+        .contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body)))
+        .andExpect(status().isCreated()).andReturn();
+    long mixedId = mapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+    approve(mixedId);
+    JsonNode other = create(landlordToken, "Other House", "Single", "2600");
+    approve(other.get("id").asLong());
+    mvc.perform(get("/api/listings?type=Single&emergency=true&minPrice=2000&maxPrice=3000"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].price").value(2900))
+        .andExpect(jsonPath("$.content[0].emergency").value(true));
+    mvc.perform(get("/api/listings?type=Single&sort=price-low"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].title").value("Other House"))
+        .andExpect(jsonPath("$.content[1].price").value(2900));
+    assertThat(publicCount("?type=Sharing&minPrice=2800")).isZero();
+  }
+
+  @Test
+  void adminDecisionsRecordActorTimeAndReason() throws Exception {
+    long id = create(landlordToken, "Audited House", "Single", "3000").get("id").asLong();
+    approve(id);
+    mvc.perform(post("/api/admin/listings/" + id + "/reject").header("Authorization", "Bearer " + adminToken)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Synthetic review reason\"}"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.rejectionReason").value("Synthetic review reason"));
+    var trail = decisions.findBySubjectTypeAndSubjectIdOrderByIdAsc("listing", id);
+    assertThat(trail).hasSize(2);
+    assertThat(trail.get(0).getActor()).isEqualTo("s4admin@test.co.za");
+    assertThat(trail.get(0).getCreatedAt()).isNotNull();
+    assertThat(trail.get(1).getReason()).isEqualTo("Synthetic review reason");
   }
 }

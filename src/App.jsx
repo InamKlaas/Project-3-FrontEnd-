@@ -9,10 +9,11 @@ import Admin from './pages/Admin.jsx'
 import MyStuff from './pages/MyStuff.jsx'
 import Notifications from './pages/Notifications.jsx'
 import Privacy from './pages/Privacy.jsx'
-import { API } from './api.js'
 
 export default function App() {
-  const { user, logout } = useAuth()
+  const { user, ready, error, retry, logout } = useAuth()
+  if (!ready) return <p className="muted">Loading session…</p>
+  if (error) return <main><section className="panel"><h1>Could not restore your session</h1><p role="alert" className="err">{error}</p><button className="btn" onClick={retry}>Retry</button></section></main>
   return (
     <>
       <header className="nav">
@@ -23,7 +24,7 @@ export default function App() {
           {!user && <><NavLink to="/login">Login</NavLink><Link className="btn sm" to="/register">Sign up</Link></>}
           {user?.role === 'student' && <><NavLink to="/my">My housing</NavLink><NavLink to="/privacy">My data</NavLink></>}
           {user && user.role !== 'admin' && <NavLink to="/messages">Messages</NavLink>}
-          {user && <NavLink to="/notifications">Notifications{API.notifications(user.email).filter(n => !n.read).length > 0 ? ` (${API.notifications(user.email).filter(n => !n.read).length})` : ''}</NavLink>}
+          {user && <NavLink to="/notifications">Notifications</NavLink>}
           {user?.role === 'landlord' && <NavLink to="/dashboard">My residences</NavLink>}
           {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
           {user && <><span className="muted">{user.name} ({user.role})</span><a href="#" onClick={e => { e.preventDefault(); logout() }}>Logout</a></>}
@@ -33,8 +34,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/listing/:id" element={<Listing />} />
-          <Route path="/login" element={<Auth mode="login" />} />
-          <Route path="/register" element={<Auth mode="register" />} />
+           <Route path="/login" element={<Auth key="login" mode="login" />} />
+           <Route path="/register" element={<Auth key="register" mode="register" />} />
           <Route path="/my" element={<Protect role="student"><MyStuff /></Protect>} />
           <Route path="/privacy" element={<Protect role="student"><Privacy /></Protect>} />
           <Route path="/notifications" element={<Protect><Notifications /></Protect>} />

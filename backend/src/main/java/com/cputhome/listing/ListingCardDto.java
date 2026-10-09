@@ -34,4 +34,7 @@ public record ListingCardDto(
     String desc,
     String address,
     boolean sample,
-    Instant createdAt) {}
+    Instant createdAt,
+    boolean active,
+    boolean published,
+    String rejectionReason) {}

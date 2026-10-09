@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 /* landlord's own shelf, every status included — the public feed hides these */
 @RestController
 @RequestMapping("/api/providers/me")
+@org.springframework.security.access.prepost.PreAuthorize("hasRole('LANDLORD')")
 public class ProviderController {
 
   private final ListingService service;

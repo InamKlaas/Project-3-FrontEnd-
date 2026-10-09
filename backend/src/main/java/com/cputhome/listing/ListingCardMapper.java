@@ -12,12 +12,18 @@ import org.springframework.stereotype.Component;
 public class ListingCardMapper {
 
   public ListingCardDto card(Accommodation accommodation) {
+    return card(accommodation, null);
+  }
+
+  public ListingCardDto card(Accommodation accommodation, ListingFilter filter) {
     List<RoomListing> rooms = accommodation.getRooms();
+    List<RoomListing> eligible = rooms.stream()
+        .filter(room -> filter == null ? room.isAvailable() : filter.matchesRoom(room)).toList();
     RoomListing shown =
-        rooms.stream()
-            .filter(RoomListing::isAvailable)
+        eligible.stream()
             .min(Comparator.comparing(RoomListing::getMonthlyRent))
-            .or(() -> rooms.stream().min(Comparator.comparing(RoomListing::getMonthlyRent)))
+            .or(() -> filter == null ? rooms.stream().min(Comparator.comparing(RoomListing::getMonthlyRent))
+                : java.util.Optional.empty())
             .orElse(null);
 
     BigDecimal price = shown == null ? BigDecimal.ZERO : shown.getMonthlyRent();
@@ -34,7 +40,7 @@ public class ListingCardMapper {
         shown == null ? "Single" : shown.getRoomType().ui(),
         shown != null && shown.isAvailable(),
         shown == null ? null : shown.getAvailableDate(),
-        shown != null && shown.isEmergency(),
+        eligible.stream().anyMatch(RoomListing::isEmergency),
         accommodation.getApprovalStatus(),
         accommodation.isOnCampus(),
         accommodation.isNsfasClaim(),
@@ -50,6 +56,9 @@ public class ListingCardMapper {
         accommodation.getDescription(),
         accommodation.getAddress(),
         accommodation.isSample(),
-        accommodation.getCreatedAt());
+        accommodation.getCreatedAt(),
+        accommodation.isActive(),
+        accommodation.isPublished(),
+        accommodation.getRejectionReason());
   }
 }

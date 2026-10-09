@@ -1,4 +1,8 @@
 ### CPUT Home POC — core workflow (VS Code REST Client or copy as curl)
+# Set DEMO_PASSWORD to a synthetic test password; paste role tokens into the variables.
+@demoPassword = {{$processEnv DEMO_PASSWORD}}
+@listingId = 1
+# Replace listingId with the id returned by create before approval/messaging.
 ### 1. register a student
 # @name register
 POST http://localhost:8080/api/auth/register
@@ -7,7 +11,7 @@ Content-Type: application/json
 {
   "fullName": "Demo Student",
   "email": "221000001@mycput.ac.za",
-  "password": "password123",
+  "password": "{{demoPassword}}",
   "role": "STUDENT",
   "studentNumber": "221000001",
   "campus": "Bellville"
@@ -20,7 +24,7 @@ Content-Type: application/json
 
 {
   "identifier": "221000001@mycput.ac.za",
-  "password": "password123"
+  "password": "{{demoPassword}}"
 }
 
 ### 3. approved public search (guest works too)
@@ -36,20 +40,20 @@ Authorization: Bearer {{landlordToken}}
 Content-Type: application/json
 
 {
-  "title": "Sample House Bellville",
+  "title": "Synthetic HTTP demo residence",
   "description": "decent place near campus",
   "location": "Bellville",
   "campus": "Bellville",
-  "rooms": [{ "roomType": "Single", "monthlyRent": 2800, "beds": 1 }]
+  "rooms": [{ "roomType": "Single", "monthlyRent": 2800, "beds": 1, "available": true, "emergency": true }]
 }
 
 ### 6. admin approves (use the id from step 5)
-POST http://localhost:8080/api/admin/listings/1/approve
+POST http://localhost:8080/api/admin/listings/{{listingId}}/approve
 Authorization: Bearer {{adminToken}}
 
 ### 7. student messages the landlord (use a visible listing id)
 # @name message
-POST http://localhost:8080/api/listings/1/messages
+POST http://localhost:8080/api/listings/{{listingId}}/messages
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -58,7 +62,7 @@ Content-Type: application/json
 }
 
 ### 8. read the thread back
-GET http://localhost:8080/api/listings/1/messages?studentId=221000001@mycput.ac.za
+GET http://localhost:8080/api/listings/{{listingId}}/messages?studentId=221000001@mycput.ac.za
 Authorization: Bearer {{token}}
 
 ### 9. inbox
@@ -67,3 +71,22 @@ Authorization: Bearer {{token}}
 
 ### 10. health
 GET http://localhost:8080/actuator/health
+
+### Landlord replies to the same student's thread
+POST http://localhost:8080/api/listings/{{listingId}}/messages
+Authorization: Bearer {{landlordToken}}
+Content-Type: application/json
+
+{"text":"Synthetic demo reply","studentEmail":"221000001@mycput.ac.za"}
+
+### Owner's feed includes pending and inactive records
+GET http://localhost:8080/api/providers/me/listings
+Authorization: Bearer {{landlordToken}}
+
+### Safe, paginated admin account feed
+GET http://localhost:8080/api/admin/users?page=0&size=20
+Authorization: Bearer {{adminToken}}
+
+### Admin listings (all statuses; add ?status=pending for only the queue)
+GET http://localhost:8080/api/admin/listings
+Authorization: Bearer {{adminToken}}

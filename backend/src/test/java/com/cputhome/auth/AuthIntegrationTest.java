@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.test.context.jdbc.Sql("/clean.sql")
 class AuthIntegrationTest {
 
   @Autowired MockMvc mvc;

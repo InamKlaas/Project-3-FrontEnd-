@@ -107,7 +107,7 @@ public class ListingService {
   }
 
   @Transactional(readOnly = true)
-  public PageResponse<ListingCardDto> browse(ListingFilter filter, Pageable pageable) {
+  public PageResponse<ListingCardDto> browse(ListingFilter filter, Pageable pageable, UserPrincipal viewer) {
     if (filter.minPrice() != null
         && filter.maxPrice() != null
         && filter.minPrice().compareTo(filter.maxPrice()) > 0) {
@@ -115,7 +115,10 @@ public class ListingService {
     }
     Page<Accommodation> page = search.searchPublic(filter, pageable);
     return new PageResponse<>(
-        page.getContent().stream().map(cards::card).toList(),
+        page.getContent().stream().map(row -> {
+          ListingCardDto card = cards.card(row, filter);
+          return viewer == null ? limited(card) : card;
+        }).toList(),
         page.getNumber(),
         page.getSize(),
         page.getTotalElements(),
@@ -137,16 +140,21 @@ public class ListingService {
       return card;
     }
     /* guests get a limited preview, no exact address */
+    return limited(card);
+  }
+
+  private ListingCardDto limited(ListingCardDto card) {
     return new ListingCardDto(
-        card.id(), card.owner(), card.ownerName(), card.title(), card.price(), card.rent(),
+        card.id(), null, null, card.title(), card.price(), card.rent(),
         card.location(), card.campus(), card.type(), card.available(), card.availableDate(),
         card.emergency(), card.status(), card.onCampus(), card.nsfas(), card.gender(),
-        card.amenities(), card.beds(), card.image(), card.gallery(), card.deposit(),
-        card.utilities(), card.houseRules(), card.shuttle(), preview(card.desc()), null,
-        card.sample(), card.createdAt());
+        List.of(), card.beds(), card.image(), card.gallery(), BigDecimal.ZERO,
+        BigDecimal.ZERO, null, null, preview(card.desc()), null,
+        card.sample(), card.createdAt(), card.active(), card.published(), null);
   }
 
   @Transactional(readOnly = true)
+  @org.springframework.security.access.prepost.PreAuthorize("hasRole('LANDLORD')")
   public List<ListingCardDto> mine(UserPrincipal principal) {
     return accommodations.findByOwnerIdOrderByCreatedAtDesc(principal.id()).stream()
         .map(cards::card)
@@ -198,6 +206,12 @@ public class ListingService {
     if (request.active() != null) {
       accommodation.setActive(request.active());
     }
+    if (request.available() != null) {
+      /* leased/available flips every room together, the card follows */
+      for (RoomListing room : rooms.findByAccommodationIdOrderByMonthlyRentAsc(id)) {
+        room.setAvailable(request.available());
+      }
+    }
     boolean material = false;
     if (request.price() != null) {
       /* price moves land on the cheapest room, the card follows */
@@ -247,7 +261,9 @@ public class ListingService {
   private static boolean isPublic(Accommodation accommodation) {
     return accommodation.isPublished()
         && accommodation.isActive()
-        && "approved".equals(accommodation.getApprovalStatus());
+        && "approved".equals(accommodation.getApprovalStatus())
+        && accommodation.getOwner().isEnabled()
+        && accommodation.getRooms().stream().anyMatch(RoomListing::isAvailable);
   }
 
   private static String preview(String description) {

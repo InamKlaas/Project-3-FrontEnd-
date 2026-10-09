@@ -1,6 +1,8 @@
 node_modules
 dist
 .env
+.env.*
+!.env.example
 *.zip
 
 # backend (java)
@@ -13,3 +15,5 @@ backend/uploads-test/
 uploads/
 *.log
 test-results/
+playwright-report/
+backend/boot.err

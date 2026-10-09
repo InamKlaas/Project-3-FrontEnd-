@@ -2,7 +2,7 @@
 
 > **For:** Muse Spark / coding agent working on PRT362S, Group IT1.
 >
-> **Deliverable:** A functioning **Java/Spring Boot + MySQL backend**, a reproducible **seed dataset**, and a **small Azure Linux VM deployment**. **No frontend rewrite.**
+> **Current deliverable (owner override):** A functioning **Java/Spring Boot + MySQL backend**, reproducible synthetic seed, and the existing React frontend wired and browser-tested through **stage 7**. Azure stage 8 is deferred.
 >
 > **Source of truth for the existing UI:** [`InamKlaas/Project-3-FrontEnd-`](https://github.com/InamKlaas/Project-3-FrontEnd-) — branch `main`, particularly [`src/api.js`](https://github.com/InamKlaas/Project-3-FrontEnd-/blob/main/src/api.js), [`src/App.jsx`](https://github.com/InamKlaas/Project-3-FrontEnd-/blob/main/src/App.jsx), and [`README.md`](https://github.com/InamKlaas/Project-3-FrontEnd-/blob/main/README.md).
 >
@@ -10,7 +10,7 @@
 >
 > **Snapshot researched:** 8 October 2026. Re-check the repo before editing; the team may have pushed new code.
 >
-> **POC STOP LINE:** Complete **Stages 0–8**, then stop. Stages 9–10 are explicitly **deferred** and are **not** a prerequisite for submission.
+> **Current POC STOP LINE:** Complete **Stages 0–7**, including frontend HTTP wiring/tests, then stop. Owner explicitly authorized the async adaptation and deferred stages 8–10.
 
 ---
 
@@ -21,8 +21,8 @@
 3. At every gate report **what changed, files, commands run, test output, and remaining blockers**. Do not silently skip a gate.
 4. If source documentation contradicts the repository, record the conflict and favor **the live frontend API needs** for DTO shape, while preserving **the academic business rules** for authorization and domain behavior. Escalate irreconcilable cases instead of inventing behavior.
 5. Work on a feature branch; do not push to `main` without review. Do not claim deployment is complete until the **public HTTPS API** has been tested.
-6. **Backend work only**: existing `src/pages`, `src/components`, `src/context`, `src/styles.css`, SVGs, and React routing are out of scope. You may **read** them. Put API adaptation instructions in `docs/backend/frontend-integration.md`, **not** in rewritten React components.
-7. The `src/api.js` methods are currently **synchronous localStorage calls**. A live HTTP implementation would require asynchronous frontend adaptation. **Backend availability does not equal frontend integration.** Record this explicitly in the handover.
+6. **Owner-authorized frontend adaptation:** wire the existing POC pages/context/adapter over HTTP, retaining routes, CSS and SVGs. Deferred workflows must be clearly labelled. Do not replace the frontend architecture or implement unrelated product modules.
+7. HTTP methods return Promises; effects and mutations must handle loading, errors, cancellation and retry. **Backend availability does not equal frontend integration.** Browser-to-MySQL evidence is required and recorded below.
 
 ### Progress dashboard
 
@@ -35,8 +35,8 @@
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [x] |
 | 5 | Student ↔ landlord messaging | Yes | [x] |
 | 6 | Deterministic database seed + demo walkthrough | Yes | [x] |
-| 7 | Backend tests + contract documentation + POC acceptance | Yes | [x] |
-| 8 | Deploy small Azure VM, smoke test, handover | Yes | [ ] |
+| 7 | Backend tests + frontend wiring/tests + contract handoff | Yes | [x] |
+| 8 | Deploy small Azure VM, smoke test, handover | No, owner-deferred | [ ] |
 | 9 | Viewing requests, favourites, notifications | No, defer | [ ] |
 | 10 | Applications, files, leases, analytics, other extras | No, defer | [ ] |
 
@@ -49,8 +49,8 @@
 - **Product:** CPUT Home — a **student accommodation search and landlord platform**, not a general campus shopping marketplace.
 - **Actors:** Guest (limited preview), `STUDENT`, `LANDLORD`, `ADMIN`.
 - **Academic high-priority flow:** CPUT student registration → browse/search/filter approved accommodation → see details → message a landlord; verified landlord creates a listing → admin approves it → listing appears in search; emergency rooms are prioritized.
-- **Keep the existing frontend, routes, imagery and copy intact.** This tracker builds services under those existing features, not a replacement frontend.
-- **Phase boundary:** Backend API usable through Swagger/cURL/Bruno/Postman and deployed. **Connecting every UI control is not this task.** A future frontend integration PR can replace local `API` methods, once async contracts are agreed.
+- **Keep the existing frontend structure, routes, styles and imagery.** Necessary async state, error handling and truthful POC/deferred copy are authorized.
+- **Current phase boundary:** POC identity/search/listing/moderation/messaging wired and tested in the browser against MySQL. Deferred controls display their scope; deployment remains a later stage.
 
 ### Tech choices — source-aware
 
@@ -66,9 +66,9 @@
 
 Your Term 2 report says the backend already has `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, the three accommodation subtype tables, 22 entities in total, two factories, and five repositories. Another related repo has been referenced as `InamKlaas/Student-Accommodation-Platform`, but it was **not accessible for inspection** through the connected GitHub access. Treat the report as *previously described work*, not proof that those files are present in the target repo today.
 
-- [ ] Find the real backend source, request repository access **if necessary**, and list actual reusable files.
-- [ ] Prefer integrating existing model/repository/factory code; do not create a competing domain or duplicate tables.
-- [ ] If the backend is unavailable, document this fact and only then bootstrap a minimal compatible implementation.
+- [x] Inspected the real backend repo; the reported domain was deleted upstream, leaving only a skeleton.
+- [x] Reuse decision documented; no accessible working model/factory layer to integrate.
+- [x] Bootstrapped the documented minimal compatible domain in `backend/` after recording the conflict.
 
 ### Critical domain rules (from project documents)
 
@@ -114,7 +114,7 @@ The following is derived from **the inspected frontend code**, not the old track
 
 **Identifiers:** Current mock `id` values are numeric. Before building endpoints, inspect the real entity PK types; choose a **stable JSON-facing ID convention** with the frontend team. Prefer existing numeric IDs if the backend already uses them, otherwise document a migration strategy for the eventual `src/api.js` adapter. Never change every frontend `id` call just to satisfy a backend preference.
 
-**Synchronous mock/API mismatch:** Since calls such as `API.approved()` are used inline during React render and `API.login()` returns synchronously, an HTTP wrapper cannot be substituted without asynchronous frontend changes. Create a written async-adapter handoff; **do not make those frontend changes in this backend-only tracker**.
+**Synchronous mock/API mismatch resolved:** Owner authorized the async changes. POC consumers now load/refetch HTTP data asynchronously; legacy deferred helpers are not presented as server-backed workflows. See `docs/backend/frontend-integration.md`.
 
 ### Required initial endpoint contract (per existing README)
 
@@ -212,7 +212,7 @@ Run the existing/reused backend skeleton locally with MySQL and a health endpoin
 - [x] Reuse the existing Maven application if found. Only scaffold a new Java 21 Spring Boot backend if there is genuinely none accessible.
 - [x] Keep existing `com.accommodation` packages and working class names where available.
 - [x] Include only needed dependencies: Web, Validation, Data JPA, Security, MySQL driver, Actuator, tests, optional Flyway and OpenAPI.
-- [x] Add `application.yml`, `application-dev.yml`, `application-test.yml` with values loaded from environment and no committed secrets.
+- [x] Add `application.properties`, `application-dev.properties`, `application-test.properties` per owner instruction; local database password is supplied by environment.
 - [x] Add MySQL to a local `compose.dev.yml` (or equivalent) with persisted named volume, test DB and local-only port binding if required.
 - [x] Configure Hikari pool conservatively for a small demonstration database.
 - [x] Add `/actuator/health` (public minimal health, no secrets) and Swagger/OpenAPI docs for development.
@@ -287,7 +287,7 @@ Real backend identity and authorization for three roles; no trusting role or ema
 - [x] Implement `POST /api/auth/login` with BCrypt check, suspended-user rejection, signed JWT and minimal safe public user DTO.
 - [x] Implement `GET /api/auth/me` from server-authenticated principal, not client email.
 - [x] Implement `POST /api/auth/logout` contract (document stateless token expiry/invalidation behavior honestly).
-- [ ] Record token lifetime, bearer header format and client storage recommendation in integration guide.
+- [x] Record token lifetime, bearer header format and actual POC client storage in integration guide.
 - [ ] Implement email verification only with a **random one-time expiring token** if time allows; do not duplicate the insecure `confirmEmail(email)` browser simulation in a public endpoint. POC seeded student can be preverified to demonstrate core workflows.
 
 ### Admin/provider authorization
@@ -300,13 +300,13 @@ Real backend identity and authorization for three roles; no trusting role or ema
 
 ### Verification / gate
 
-- [x] Student `@mycput.ac.c.za` registration accepted; other domains rejected for students.
-- [ ] Landlord standard email registration accepted but cannot publish before verification.
+- [x] Student `@mycput.ac.za` registration accepted; other domains rejected for students.
+- [x] Landlord standard email registration accepted but cannot create before verification; browser and backend tests prove it.
 - [x] Public admin signup rejected; password stored hashed.
 - [x] JWT login/me works; missing/invalid token receives 401; wrong role 403.
 - [x] Suspension denies login and protected actions.
-- [ ] Tests verify ownership is not bypassed by forged `owner`, `role`, or `student` JSON fields.
-- [x] **STAGE 3 COMPLETE** (carry-overs: publish-gating proven in stage 4, forged-owner/student in stages 4–5, token guide in stage 7, email tokens deferred)
+- [x] Tests verify ownership is not bypassed by forged identity/status fields; unrelated participants cannot read private threads.
+- [x] **STAGE 3 COMPLETE** (email delivery/one-time verification tokens remain explicitly deferred)
 
 ---
 
@@ -372,14 +372,14 @@ Show actual persistent, authorized, two-way messaging for one listed room. **RES
 - [x] Implement `GET /api/conversations` for per-user inbox summaries (corresponds to `threadsFor(user)`).
 - [x] Prevent unrelated students, landlords and guests from reading/injecting messages into conversations.
 - [x] Validate text length and reject blank messages; paginate or cap returned history.
-- [x] Test conversation history remains after app restart (actual MySQL persistence).
+- [ ] Repeat the dedicated process-restart message-history check for the final wiring build; browser reload against MySQL is proven separately.
 - [x] Document that WebSocket/STOMP, typing indicators, read receipts and real-time push are **out of scope** for the POC.
 
 ### Verification / gate
 
 - [x] Student sends; landlord sees; landlord replies; student sees both messages after reload.
 - [x] Unauthenticated and nonparticipant access returns 401/403/404 as appropriate (do not leak private details).
-- [x] No client-controlled sender spoofing; messages survive restart.
+- [x] No client-controlled sender spoofing; persisted messages are reread after browser reload.
 - [x] **STAGE 5 COMPLETE**
 
 ---
@@ -418,11 +418,11 @@ Make a freshly deployed database useful in minutes with repeatable **clearly lab
 
 ---
 
-# STAGE 7 — POC tests, API examples and backend-only handoff
+# STAGE 7 — POC tests, frontend wiring, API examples and handoff
 
 ## Goal
 
-Prove this is a functioning backend **without requiring frontend code changes**. Give the team precise instructions to wire the existing React later.
+Prove the backend and existing React frontend work together through HTTP. Preserve the POC scope and provide a reproducible local handoff with honest verification limits.
 
 ### Automated tests
 
@@ -432,21 +432,24 @@ Prove this is a functioning backend **without requiring frontend code changes**.
 - [x] Test messaging participant restrictions and persist/reload behavior.
 - [x] Test seed repeatability and one clean DB migration.
 - [x] Add at least one Spring Boot/MockMvc API integration path for **register/login → create listing → approve → find listing → send message**.
-- [x] Run Maven tests and package with a fresh database; record command/result.
+- [x] Run Maven tests/package against clean H2 fixtures and wire-up tests against local MySQL; V4 live upgrade verified. See the evidence for fresh-clone limits.
+- [x] Browser registration → verification → pending listing → approval → chat/reply → reload → rent re-review passes.
+- [x] Browser search/limited preview, domain/role/participant denial, network retry and invalid-token handling pass.
+- [x] Frontend production build passes.
 
 ### Docs & handover
 
 - [x] Export a Swagger/OpenAPI description and add a minimal **Bruno collection, Postman collection, or `requests.http`** for the core workflow.
 - [x] Include JWT login and curl examples with placeholders, not hardcoded secrets.
 - [x] Write `docs/backend/frontend-integration.md`: method-by-method replacement map for `API.login`, `API.me`, `API.approved`, `API.listing`, `API.addListing`, `API.updateListing`, `API.send`, `API.thread`, `API.threadsFor`, etc.
-- [x] Explicitly document how to convert synchronous `src/api.js` to Promise-returning HTTP calls **in a future frontend PR**; note each screen that currently renders local data without async state.
+- [x] Document the implemented Promise-returning adapter, screen loading/error/retry state and cancellation handling.
 - [x] Document API field aliases/projections for `type`, `price`, `available`, `status`, `owner`, `id`, `image` and `gallery`; list any divergence from mock shape.
 - [x] Write `docs/backend/poc-demo-script.md` (10 steps maximum): register/login, approved search, emergency search, landlord listing, admin approval, student message, landlord reply.
 - [x] Document remaining frontend demo-only functions **not implemented**, rather than making stub endpoints that falsely return success.
 
 ### Final local acceptance checklist
 
-- [x] A clean clone with README steps starts MySQL/backend without special local knowledge.
+- [ ] Final clean-clone startup was not rerun; README steps and local builds are provided without claiming that extra proof.
 - [x] API documented and testable via HTTP without React/browser localStorage.
 - [x] No 500 errors in the scripted happy-path demo.
 - [x] Illegal role/ownership actions blocked by backend.
@@ -542,7 +545,7 @@ This is a **demo** deployment, not a production HA claim. On a combined app+DB 4
 - [ ] Provider onboarding uploads and accreditation management with verifiable claims rather than trusting mocked sample fields.
 - [ ] Lease issuance and canvas signature: treat as a non-legal demonstration only, **not** legal contract generation; explicit separate approval required.
 - [ ] Email verification with real email provider and one-time tokens; password reset only if needed.
-- [ ] Frontend async integration (replace `src/api.js` and refactor affected React screens) as a **separate frontend-owned PR**.
+- [ ] Broader frontend extras beyond the owner-authorized stage-7 POC; core async wiring is already implemented in stage 7.
 - [ ] **No payment processing** without a separate scope/security/legal decision.
 - [ ] **STAGE 10 COMPLETE (OPTIONAL)**
 
@@ -550,20 +553,20 @@ This is a **demo** deployment, not a production HA claim. On a combined app+DB 4
 
 # Mandatory POC evidence bundle
 
-When Stage 8 passes, produce these from the actual implementation (never invent evidence):
+For the owner's stage-7 stop line, record these from the actual implementation; deployment evidence remains deferred:
 
 - [ ] Backend source committed and reviewed, with link + SHA.
-- [ ] One-page architecture explanation: existing React frontend → HTTP `/api` → Spring Boot services → Spring Data JPA → MySQL.
-- [ ] Entity relationship summary showing `USER`/profiles and `ACCOMMODATION`/`ROOM_LISTING`/subtypes.
-- [ ] OpenAPI specification or API collection and role-based sample requests.
-- [ ] Seed instructions, synthetic account-role list (passwords privately shared, not published) and repeatability test.
-- [ ] Evidence for admin publish workflow and emergency filtering.
-- [ ] Evidence for student↔landlord messaging and role restriction.
-- [ ] `mvn test` result with number of tests/passes; record failures honestly.
+- [x] Architecture and normalized property/room projection described in README/integration guide.
+- [x] Domain/model reconciliation documented in the contract audit and stage-2 code.
+- [x] Current OpenAPI export (20 paths) and role-based HTTP requests.
+- [x] Seed instructions, development-only account-role list and count/state repeatability test.
+- [x] Admin publish workflow and matching-room emergency filtering proven by backend/browser tests.
+- [x] Student↔landlord replies, browser reload and participant denial proven.
+- [x] Maven result: 51 passed; browser suite: 4 passed; production frontend build passed.
 - [ ] Public HTTPS API URL and health proof; Azure VM resources + ports diagram/screenshot if requested for submission.
-- [ ] Exact **not implemented** list, especially browser-to-backend React migration and deferred lease/application features.
+- [x] Exact deferred list documented; frontend HTTP migration is now implemented, while lease/application/upload/deployment workflows remain deferred.
 
-## Submission demo script (backend HTTP only)
+## Submission demo script (browser or backend HTTP)
 
 1. Check public API health.
 2. Browse seeded approved rooms, then filter emergency rooms.
@@ -587,15 +590,16 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | 2026-10-08 ~22:20 | 2 | `poc/backend`, domain `user`+`listing` packages | `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, 3 subtype entities, 5 repositories, `V1__create_core.sql`, `ListingCardDto`+mapper, `AccommodationRepositoryTest`, `ListingCardMapperTest` | `mvn test` 15/15, fresh MySQL `cput_home` migrated V1 (11 tables), repeat boot validates clean, `GET /actuator/health` UP | **STAGE 2 COMPLETE**. Upstream domain was deleted so entities are new-but-compatible (numeric ids, lowercase wire enums, BigDecimal rents). Boot 4 needs manual Flyway runner (`FlywayConfig`, no auto-config in 4.0.6) + new `DataJpaTest` package `boot.data.jpa.test.autoconfigure`. No React files touched. Backend left running :8080. |
 | 2026-10-08 ~23:00 | 3 | `poc/backend`, `auth`+`admin` packages | `JwtService`, filter wired into `SecurityConfig`, `Register/Login/AuthResponse/MeResponse`, `AuthService/Controller`, `AdminService/Controller` (provider queue, verify, disable/enable), `AccessDenied`→403 handler | `mvn test` 19/19 (auth 10, admin 3, errors 6) | **STAGE 3 COMPLETE** with carry-overs noted at the gate. Owner override: frontend HTTP wiring + wire-up tests authorized through stage 7 (tracker backend-only rule lifted by project owner). No React files touched yet. |
 | 2026-10-09 ~00:00 | 4 | `poc/backend`, `listing` package + admin moderation | `Create/UpdateListingRequest`, `ListingFilter`, `ListingSearchRepository` (criteria search, min-rent/priority sorts), `ListingService/Controller`, `ProviderController`, subtype repos, admin approve/reject/unpublish/queue | `mvn test` 38/38 (listing 9 new), live MySQL smoke (register→403 unverified, guest search, guest preview hides address) | **STAGE 4 COMPLETE**. Material price/date edits re-open review (documented choice). Rejection reasons persist on the row (no separate audit table in POC). Audit-trail proper stays deferred. Backend left running :8080. |
-| 2026-10-09 ~03:00 | 7 | `poc/backend`, docs + journey test | `PocJourneyTest` (register?create?approve?find?message), `docs/backend/openapi.json` (16 paths), `cput-home-poc.http`, `frontend-integration.md`, `poc-demo-script.md` | `mvn test` 44/44, `mvn package` ok | **STAGE 7 COMPLETE**. Remaining demo-only UI catalogued, async rewrite stays a frontend PR. |
+| 2026-10-09 ~03:00 | 7 (initial backend gate) | `poc/backend`, docs + journey test | `PocJourneyTest`, initial OpenAPI (16 paths), HTTP examples and handoff | `mvn test` 44/44, package ok | Backend-only checkpoint; owner's additional frontend wiring acceptance still outstanding at this point. |
 | 2026-10-09 ~01:00 | 6 | `poc/backend`, `seed` package + `V3` | `SeedService` (idempotent, 11 properties, 5 accounts, 2-message thread), `DevSeedRunner` (`dev` only), `db-reset-demo.sh` (localhost-guarded), backend README creds | `SeedRepeatabilityTest` green, live dev boot: V2+V3 applied, 11 properties seeded, `?emergency=1` returns 2 truly-available rooms, seeded logins work | **STAGE 6 COMPLETE**. `sample` flag via additive `V3`. No React files touched. |
+| 2026-10-09 (final wiring gate) | 7 | `poc/backend`; final SHA in git log | HTTP adapter/context/POC pages, safe admin feed/removal, matching-room projection/sorting, moderation trail/V4, seed-state preservation, browser suite, handoff | `mvn -o verify "-Dspring.jpa.show-sql=false"` 51/51; `npm test` 4/4 against MySQL; `npm run build` passed; `npm run docs:openapi` exported 20 paths | Owner override completed: real browser wiring verified. Initial browser cold-start timeouts and a label selector were corrected before the final green run. Fresh-clone and dedicated process-restart checks remain unchecked, as does the optional shell reset runtime. Azure deferred. |
 
 ## Final status
 
-- **Required stages passed:** `0 / 9`
-- **Ready to submit:** **NO** (until Stages 0–8 pass)
-- **Frontend connected to live backend:** **NO / OUT OF SCOPE** (must not be misrepresented)
+- **Authorized stage checkpoints:** 0–7 implemented; verification carry-overs are explicitly unchecked above.
+- **Ready for local POC demo:** **YES** — 51 backend tests, 4 live browser tests, frontend build passing.
+- **Frontend connected to live backend:** **YES** for identity, search/detail, owned listings, moderation and messaging; deferred controls labelled.
 - **Azure HTTPS API URL:** _Not deployed_
-- **Known blockers:** _None recorded yet_
+- **Remaining evidence:** Final clean-clone startup, dedicated process-restart message proof and optional shell reset runtime are not claimed. Azure stages 8–10 are owner-deferred.
 
-*End of backend-only CPUT Home POC tracker. Stop at Stage 8.*
+*End of CPUT Home POC tracker. Current owner stop line: stage 7.*
