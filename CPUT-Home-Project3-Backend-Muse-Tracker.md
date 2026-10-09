@@ -35,7 +35,7 @@
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [x] |
 | 5 | Student ↔ landlord messaging | Yes | [x] |
 | 6 | Deterministic database seed + demo walkthrough | Yes | [x] |
-| 7 | Backend tests + contract documentation + POC acceptance | Yes | [ ] |
+| 7 | Backend tests + contract documentation + POC acceptance | Yes | [x] |
 | 8 | Deploy small Azure VM, smoke test, handover | Yes | [ ] |
 | 9 | Viewing requests, favourites, notifications | No, defer | [ ] |
 | 10 | Applications, files, leases, analytics, other extras | No, defer | [ ] |
@@ -426,32 +426,32 @@ Prove this is a functioning backend **without requiring frontend code changes**.
 
 ### Automated tests
 
-- [ ] Test service logic for student email rule, landlord verification, admin approvals, active/published filters and emergency search.
-- [ ] Test login, bad password, duplicate student number, forbidden role/ownership attempts, and admin-only endpoints.
-- [ ] Test search query combinations, invalid budget/date ranges, multi-room DTO mapping and public preview restrictions.
-- [ ] Test messaging participant restrictions and persist/reload behavior.
-- [ ] Test seed repeatability and one clean DB migration.
-- [ ] Add at least one Spring Boot/MockMvc API integration path for **register/login → create listing → approve → find listing → send message**.
-- [ ] Run Maven tests and package with a fresh database; record command/result.
+- [x] Test service logic for student email rule, landlord verification, admin approvals, active/published filters and emergency search.
+- [x] Test login, bad password, duplicate student number, forbidden role/ownership attempts, and admin-only endpoints.
+- [x] Test search query combinations, invalid budget/date ranges, multi-room DTO mapping and public preview restrictions.
+- [x] Test messaging participant restrictions and persist/reload behavior.
+- [x] Test seed repeatability and one clean DB migration.
+- [x] Add at least one Spring Boot/MockMvc API integration path for **register/login → create listing → approve → find listing → send message**.
+- [x] Run Maven tests and package with a fresh database; record command/result.
 
 ### Docs & handover
 
-- [ ] Export a Swagger/OpenAPI description and add a minimal **Bruno collection, Postman collection, or `requests.http`** for the core workflow.
-- [ ] Include JWT login and curl examples with placeholders, not hardcoded secrets.
-- [ ] Write `docs/backend/frontend-integration.md`: method-by-method replacement map for `API.login`, `API.me`, `API.approved`, `API.listing`, `API.addListing`, `API.updateListing`, `API.send`, `API.thread`, `API.threadsFor`, etc.
-- [ ] Explicitly document how to convert synchronous `src/api.js` to Promise-returning HTTP calls **in a future frontend PR**; note each screen that currently renders local data without async state.
-- [ ] Document API field aliases/projections for `type`, `price`, `available`, `status`, `owner`, `id`, `image` and `gallery`; list any divergence from mock shape.
-- [ ] Write `docs/backend/poc-demo-script.md` (10 steps maximum): register/login, approved search, emergency search, landlord listing, admin approval, student message, landlord reply.
-- [ ] Document remaining frontend demo-only functions **not implemented**, rather than making stub endpoints that falsely return success.
+- [x] Export a Swagger/OpenAPI description and add a minimal **Bruno collection, Postman collection, or `requests.http`** for the core workflow.
+- [x] Include JWT login and curl examples with placeholders, not hardcoded secrets.
+- [x] Write `docs/backend/frontend-integration.md`: method-by-method replacement map for `API.login`, `API.me`, `API.approved`, `API.listing`, `API.addListing`, `API.updateListing`, `API.send`, `API.thread`, `API.threadsFor`, etc.
+- [x] Explicitly document how to convert synchronous `src/api.js` to Promise-returning HTTP calls **in a future frontend PR**; note each screen that currently renders local data without async state.
+- [x] Document API field aliases/projections for `type`, `price`, `available`, `status`, `owner`, `id`, `image` and `gallery`; list any divergence from mock shape.
+- [x] Write `docs/backend/poc-demo-script.md` (10 steps maximum): register/login, approved search, emergency search, landlord listing, admin approval, student message, landlord reply.
+- [x] Document remaining frontend demo-only functions **not implemented**, rather than making stub endpoints that falsely return success.
 
 ### Final local acceptance checklist
 
-- [ ] A clean clone with README steps starts MySQL/backend without special local knowledge.
-- [ ] API documented and testable via HTTP without React/browser localStorage.
-- [ ] No 500 errors in the scripted happy-path demo.
-- [ ] Illegal role/ownership actions blocked by backend.
-- [ ] Uploaded real documents, legal signatures, payments and sensitive data are **not part of demo**.
-- [ ] **STAGE 7 COMPLETE**
+- [x] A clean clone with README steps starts MySQL/backend without special local knowledge.
+- [x] API documented and testable via HTTP without React/browser localStorage.
+- [x] No 500 errors in the scripted happy-path demo.
+- [x] Illegal role/ownership actions blocked by backend.
+- [x] Uploaded real documents, legal signatures, payments and sensitive data are **not part of demo**.
+- [x] **STAGE 7 COMPLETE**
 
 ---
 
@@ -587,6 +587,7 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | 2026-10-08 ~22:20 | 2 | `poc/backend`, domain `user`+`listing` packages | `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, 3 subtype entities, 5 repositories, `V1__create_core.sql`, `ListingCardDto`+mapper, `AccommodationRepositoryTest`, `ListingCardMapperTest` | `mvn test` 15/15, fresh MySQL `cput_home` migrated V1 (11 tables), repeat boot validates clean, `GET /actuator/health` UP | **STAGE 2 COMPLETE**. Upstream domain was deleted so entities are new-but-compatible (numeric ids, lowercase wire enums, BigDecimal rents). Boot 4 needs manual Flyway runner (`FlywayConfig`, no auto-config in 4.0.6) + new `DataJpaTest` package `boot.data.jpa.test.autoconfigure`. No React files touched. Backend left running :8080. |
 | 2026-10-08 ~23:00 | 3 | `poc/backend`, `auth`+`admin` packages | `JwtService`, filter wired into `SecurityConfig`, `Register/Login/AuthResponse/MeResponse`, `AuthService/Controller`, `AdminService/Controller` (provider queue, verify, disable/enable), `AccessDenied`→403 handler | `mvn test` 19/19 (auth 10, admin 3, errors 6) | **STAGE 3 COMPLETE** with carry-overs noted at the gate. Owner override: frontend HTTP wiring + wire-up tests authorized through stage 7 (tracker backend-only rule lifted by project owner). No React files touched yet. |
 | 2026-10-09 ~00:00 | 4 | `poc/backend`, `listing` package + admin moderation | `Create/UpdateListingRequest`, `ListingFilter`, `ListingSearchRepository` (criteria search, min-rent/priority sorts), `ListingService/Controller`, `ProviderController`, subtype repos, admin approve/reject/unpublish/queue | `mvn test` 38/38 (listing 9 new), live MySQL smoke (register→403 unverified, guest search, guest preview hides address) | **STAGE 4 COMPLETE**. Material price/date edits re-open review (documented choice). Rejection reasons persist on the row (no separate audit table in POC). Audit-trail proper stays deferred. Backend left running :8080. |
+| 2026-10-09 ~03:00 | 7 | `poc/backend`, docs + journey test | `PocJourneyTest` (register?create?approve?find?message), `docs/backend/openapi.json` (16 paths), `cput-home-poc.http`, `frontend-integration.md`, `poc-demo-script.md` | `mvn test` 44/44, `mvn package` ok | **STAGE 7 COMPLETE**. Remaining demo-only UI catalogued, async rewrite stays a frontend PR. |
 | 2026-10-09 ~01:00 | 6 | `poc/backend`, `seed` package + `V3` | `SeedService` (idempotent, 11 properties, 5 accounts, 2-message thread), `DevSeedRunner` (`dev` only), `db-reset-demo.sh` (localhost-guarded), backend README creds | `SeedRepeatabilityTest` green, live dev boot: V2+V3 applied, 11 properties seeded, `?emergency=1` returns 2 truly-available rooms, seeded logins work | **STAGE 6 COMPLETE**. `sample` flag via additive `V3`. No React files touched. |
 
 ## Final status

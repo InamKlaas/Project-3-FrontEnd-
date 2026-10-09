@@ -1,0 +1,69 @@
+### CPUT Home POC — core workflow (VS Code REST Client or copy as curl)
+### 1. register a student
+# @name register
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Demo Student",
+  "email": "221000001@mycput.ac.za",
+  "password": "password123",
+  "role": "STUDENT",
+  "studentNumber": "221000001",
+  "campus": "Bellville"
+}
+
+### 2. login (paste the token below as {{token}})
+# @name login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "221000001@mycput.ac.za",
+  "password": "password123"
+}
+
+### 3. approved public search (guest works too)
+GET http://localhost:8080/api/listings?campus=Bellville&maxPrice=4000&sort=priority&size=20
+
+### 4. emergency rooms only
+GET http://localhost:8080/api/listings?emergency=true&size=20
+
+### 5. landlord creates (needs a verified landlord token)
+# @name create
+POST http://localhost:8080/api/listings
+Authorization: Bearer {{landlordToken}}
+Content-Type: application/json
+
+{
+  "title": "Sample House Bellville",
+  "description": "decent place near campus",
+  "location": "Bellville",
+  "campus": "Bellville",
+  "rooms": [{ "roomType": "Single", "monthlyRent": 2800, "beds": 1 }]
+}
+
+### 6. admin approves (use the id from step 5)
+POST http://localhost:8080/api/admin/listings/1/approve
+Authorization: Bearer {{adminToken}}
+
+### 7. student messages the landlord (use a visible listing id)
+# @name message
+POST http://localhost:8080/api/listings/1/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "text": "is october open?"
+}
+
+### 8. read the thread back
+GET http://localhost:8080/api/listings/1/messages?studentId=221000001@mycput.ac.za
+Authorization: Bearer {{token}}
+
+### 9. inbox
+GET http://localhost:8080/api/conversations
+Authorization: Bearer {{token}}
+
+### 10. health
+GET http://localhost:8080/actuator/health
