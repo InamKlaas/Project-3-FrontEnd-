@@ -34,7 +34,7 @@
 | 3 | Auth, role authorization, student/provider identity | Yes | [x] |
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [x] |
 | 5 | Student ↔ landlord messaging | Yes | [x] |
-| 6 | Deterministic database seed + demo walkthrough | Yes | [ ] |
+| 6 | Deterministic database seed + demo walkthrough | Yes | [x] |
 | 7 | Backend tests + contract documentation + POC acceptance | Yes | [ ] |
 | 8 | Deploy small Azure VM, smoke test, handover | Yes | [ ] |
 | 9 | Viewing requests, favourites, notifications | No, defer | [ ] |
@@ -392,29 +392,29 @@ Make a freshly deployed database useful in minutes with repeatable **clearly lab
 
 ### Seed design
 
-- [ ] Create `dev`/`demo` seed profile using `ApplicationRunner`, dedicated seed command, or SQL migrations designed for repeat execution. **Do not run demo seeds in ordinary production automatically.**
-- [ ] Seed role-specific demo accounts: `STUDENT`, `LANDLORD`, `ADMIN`, with known **test-only** credentials documented locally. Hash passwords; never reuse the frontend mock's `admin123`/`demo123` on a publicly accessible VM.
-- [ ] Add one **approved verified landlord**, one **pending landlord**, and multiple student records using reserved/synthetic identifiers and non-real personal information.
-- [ ] Seed **8–12** realistic-looking but explicitly fake accommodation records across existing UI campuses (e.g., Bellville, Cape Town / District Six, Wellington, Parow), each with at least one `RoomListing`.
-- [ ] Optionally expand from the existing `campusHomes` sample names in `src/api.js`, but preserve the README disclaimer; never imply names, availability, NSFAS status or prices have been independently confirmed.
-- [ ] Include **at least**: 4 public approved+active+available listings, 2 pending listings, 1 admin-rejected/unpublished listing, 1 landlord-inactive listing, 2 emergency available rooms, 1 unavailable room.
-- [ ] Seed varied price bands, `Single`/`Sharing`/`Bachelor` UI projections, different campuses, amenities, date availability, and image/gallery paths that exist under the existing frontend's `public/images/`.
-- [ ] Seed one student↔landlord message thread (ideally 2 messages) to show inbox history immediately.
-- [ ] Set `sample=true`, synthetic addresses and descriptions (`Sample area only; verify with provider`); never invent a credible private street address.
-- [ ] Use fixed natural keys/UUIDs or an idempotent existence check so a second seed does not duplicate 12 listings or three users.
-- [ ] Mark dev/demo account credentials as **development only** in README. For public demo deployment, use separate **strong generated** credentials distributed privately, or seed locked/read-only showcase records with no publicly documented administrative login.
-- [ ] Add `db-reset-demo.sh` or a documented reproducible reset procedure for local test environment only; guard destructive operation so it cannot run against public VM by accident.
-- [ ] Keep seed implementation, input assets and scripts version controlled, but never store a real `.env` or decrypted credentials in git.
+- [x] Create `dev`/`demo` seed profile using `ApplicationRunner`, dedicated seed command, or SQL migrations designed for repeat execution. **Do not run demo seeds in ordinary production automatically.**
+- [x] Seed role-specific demo accounts: `STUDENT`, `LANDLORD`, `ADMIN`, with known **test-only** credentials documented locally. Hash passwords; never reuse the frontend mock's `admin123`/`demo123` on a publicly accessible VM.
+- [x] Add one **approved verified landlord**, one **pending landlord**, and multiple student records using reserved/synthetic identifiers and non-real personal information.
+- [x] Seed **8–12** realistic-looking but explicitly fake accommodation records across existing UI campuses (e.g., Bellville, Cape Town / District Six, Wellington, Parow), each with at least one `RoomListing`.
+- [x] Optionally expand from the existing `campusHomes` sample names in `src/api.js`, but preserve the README disclaimer; never imply names, availability, NSFAS status or prices have been independently confirmed.
+- [x] Include **at least**: 4 public approved+active+available listings, 2 pending listings, 1 admin-rejected/unpublished listing, 1 landlord-inactive listing, 2 emergency available rooms, 1 unavailable room.
+- [x] Seed varied price bands, `Single`/`Sharing`/`Bachelor` UI projections, different campuses, amenities, date availability, and image/gallery paths that exist under the existing frontend's `public/images/`.
+- [x] Seed one student↔landlord message thread (ideally 2 messages) to show inbox history immediately.
+- [x] Set `sample=true`, synthetic addresses and descriptions (`Sample area only; verify with provider`); never invent a credible private street address.
+- [x] Use fixed natural keys/UUIDs or an idempotent existence check so a second seed does not duplicate 12 listings or three users.
+- [x] Mark dev/demo account credentials as **development only** in README. For public demo deployment, use separate **strong generated** credentials distributed privately, or seed locked/read-only showcase records with no publicly documented administrative login.
+- [x] Add `db-reset-demo.sh` or a documented reproducible reset procedure for local test environment only; guard destructive operation so it cannot run against public VM by accident.
+- [x] Keep seed implementation, input assets and scripts version controlled, but never store a real `.env` or decrypted credentials in git.
 
 ### Verification / gate
 
-- [ ] Fresh empty DB + seed produces expected count and relationships.
-- [ ] Re-running seed changes no row counts and creates no duplicates.
-- [ ] Public `GET /api/listings?emergency=1` returns emergency approved active *available* seed records only.
-- [ ] Pending, rejected, inactive and unavailable items are excluded from public results.
-- [ ] Seeded student and verified landlord can log in with local test secrets; seeded admin can approve pending listing.
-- [ ] Seeded messages can be read by their participants, not others.
-- [ ] **STAGE 6 COMPLETE**
+- [x] Fresh empty DB + seed produces expected count and relationships.
+- [x] Re-running seed changes no row counts and creates no duplicates.
+- [x] Public `GET /api/listings?emergency=1` returns emergency approved active *available* seed records only.
+- [x] Pending, rejected, inactive and unavailable items are excluded from public results.
+- [x] Seeded student and verified landlord can log in with local test secrets; seeded admin can approve pending listing.
+- [x] Seeded messages can be read by their participants, not others.
+- [x] **STAGE 6 COMPLETE**
 
 ---
 
@@ -587,6 +587,7 @@ When Stage 8 passes, produce these from the actual implementation (never invent 
 | 2026-10-08 ~22:20 | 2 | `poc/backend`, domain `user`+`listing` packages | `User`, `StudentProfile`, `LandlordProfile`, `Accommodation`, `RoomListing`, 3 subtype entities, 5 repositories, `V1__create_core.sql`, `ListingCardDto`+mapper, `AccommodationRepositoryTest`, `ListingCardMapperTest` | `mvn test` 15/15, fresh MySQL `cput_home` migrated V1 (11 tables), repeat boot validates clean, `GET /actuator/health` UP | **STAGE 2 COMPLETE**. Upstream domain was deleted so entities are new-but-compatible (numeric ids, lowercase wire enums, BigDecimal rents). Boot 4 needs manual Flyway runner (`FlywayConfig`, no auto-config in 4.0.6) + new `DataJpaTest` package `boot.data.jpa.test.autoconfigure`. No React files touched. Backend left running :8080. |
 | 2026-10-08 ~23:00 | 3 | `poc/backend`, `auth`+`admin` packages | `JwtService`, filter wired into `SecurityConfig`, `Register/Login/AuthResponse/MeResponse`, `AuthService/Controller`, `AdminService/Controller` (provider queue, verify, disable/enable), `AccessDenied`→403 handler | `mvn test` 19/19 (auth 10, admin 3, errors 6) | **STAGE 3 COMPLETE** with carry-overs noted at the gate. Owner override: frontend HTTP wiring + wire-up tests authorized through stage 7 (tracker backend-only rule lifted by project owner). No React files touched yet. |
 | 2026-10-09 ~00:00 | 4 | `poc/backend`, `listing` package + admin moderation | `Create/UpdateListingRequest`, `ListingFilter`, `ListingSearchRepository` (criteria search, min-rent/priority sorts), `ListingService/Controller`, `ProviderController`, subtype repos, admin approve/reject/unpublish/queue | `mvn test` 38/38 (listing 9 new), live MySQL smoke (register→403 unverified, guest search, guest preview hides address) | **STAGE 4 COMPLETE**. Material price/date edits re-open review (documented choice). Rejection reasons persist on the row (no separate audit table in POC). Audit-trail proper stays deferred. Backend left running :8080. |
+| 2026-10-09 ~01:00 | 6 | `poc/backend`, `seed` package + `V3` | `SeedService` (idempotent, 11 properties, 5 accounts, 2-message thread), `DevSeedRunner` (`dev` only), `db-reset-demo.sh` (localhost-guarded), backend README creds | `SeedRepeatabilityTest` green, live dev boot: V2+V3 applied, 11 properties seeded, `?emergency=1` returns 2 truly-available rooms, seeded logins work | **STAGE 6 COMPLETE**. `sample` flag via additive `V3`. No React files touched. |
 
 ## Final status
 

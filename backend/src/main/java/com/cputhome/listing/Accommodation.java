@@ -69,6 +69,10 @@ public class Accommodation extends AuditableEntity {
   @Column(name = "utilities", precision = 12, scale = 2)
   private BigDecimal utilities = BigDecimal.ZERO;
 
+  /* synthetic seed rows say so, provider rows never do */
+  @Column(name = "sample", nullable = false)
+  private boolean sample = false;
+
   /* admin-controlled publish, landlord-controlled activity — independent */
   @Column(name = "is_published", nullable = false)
   private boolean published = false;
@@ -203,6 +207,14 @@ public class Accommodation extends AuditableEntity {
 
   public void setUtilities(BigDecimal utilities) {
     this.utilities = utilities;
+  }
+
+  public boolean isSample() {
+    return sample;
+  }
+
+  public void setSample(boolean sample) {
+    this.sample = sample;
   }
 
   public boolean isPublished() {

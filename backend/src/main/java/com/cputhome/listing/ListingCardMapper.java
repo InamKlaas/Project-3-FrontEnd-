@@ -49,7 +49,7 @@ public class ListingCardMapper {
         accommodation.getShuttle(),
         accommodation.getDescription(),
         accommodation.getAddress(),
-        false,
+        accommodation.isSample(),
         accommodation.getCreatedAt());
   }
 }

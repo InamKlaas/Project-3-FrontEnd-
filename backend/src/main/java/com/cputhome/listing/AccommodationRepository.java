@@ -13,6 +13,8 @@ public interface AccommodationRepository extends JpaRepository<Accommodation, Lo
 
   List<Accommodation> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
 
+  boolean existsByTitle(String title);
+
   /* public shelf: published by admin, active by landlord, approved,
    * with at least one available room. nothing else ever leaks out. */
   @Query(
