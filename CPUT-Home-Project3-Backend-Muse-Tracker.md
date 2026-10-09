@@ -33,7 +33,7 @@
 | 2 | Reconcile/reuse existing entity + repository layer | Yes | [x] |
 | 3 | Auth, role authorization, student/provider identity | Yes | [x] |
 | 4 | Listings, rooms, search, emergency, admin approvals | Yes | [x] |
-| 5 | Student ↔ landlord messaging | Yes | [ ] |
+| 5 | Student ↔ landlord messaging | Yes | [x] |
 | 6 | Deterministic database seed + demo walkthrough | Yes | [ ] |
 | 7 | Backend tests + contract documentation + POC acceptance | Yes | [ ] |
 | 8 | Deploy small Azure VM, smoke test, handover | Yes | [ ] |
@@ -364,23 +364,23 @@ Show actual persistent, authorized, two-way messaging for one listed room. **RES
 
 ### Tasks
 
-- [ ] Reuse existing `Message`/conversation model if present; otherwise add minimal tables for message body, sender, student participant, listing/room, createdAt.
-- [ ] Implement a **thread identity** scoped to `(listingId, studentId)` as implied by `API.thread(listingId, student)` in `src/api.js`.
-- [ ] Implement `POST /api/listings/{id}/messages`, using authenticated sender and recipient authorization; ignore client-supplied `from` as an identity source.
-- [ ] Allow STUDENT to open a conversation with an eligible listing’s landlord; allow that listing’s LANDLORD to reply to the same student.
-- [ ] Implement `GET /api/listings/{id}/messages?studentId=...` with correctly ordered messages, timestamps and safe DTOs.
-- [ ] Implement `GET /api/conversations` for per-user inbox summaries (corresponds to `threadsFor(user)`).
-- [ ] Prevent unrelated students, landlords and guests from reading/injecting messages into conversations.
-- [ ] Validate text length and reject blank messages; paginate or cap returned history.
-- [ ] Test conversation history remains after app restart (actual MySQL persistence).
-- [ ] Document that WebSocket/STOMP, typing indicators, read receipts and real-time push are **out of scope** for the POC.
+- [x] Reuse existing `Message`/conversation model if present; otherwise add minimal tables for message body, sender, student participant, listing/room, createdAt.
+- [x] Implement a **thread identity** scoped to `(listingId, studentId)` as implied by `API.thread(listingId, student)` in `src/api.js`.
+- [x] Implement `POST /api/listings/{id}/messages`, using authenticated sender and recipient authorization; ignore client-supplied `from` as an identity source.
+- [x] Allow STUDENT to open a conversation with an eligible listing’s landlord; allow that listing’s LANDLORD to reply to the same student.
+- [x] Implement `GET /api/listings/{id}/messages?studentId=...` with correctly ordered messages, timestamps and safe DTOs.
+- [x] Implement `GET /api/conversations` for per-user inbox summaries (corresponds to `threadsFor(user)`).
+- [x] Prevent unrelated students, landlords and guests from reading/injecting messages into conversations.
+- [x] Validate text length and reject blank messages; paginate or cap returned history.
+- [x] Test conversation history remains after app restart (actual MySQL persistence).
+- [x] Document that WebSocket/STOMP, typing indicators, read receipts and real-time push are **out of scope** for the POC.
 
 ### Verification / gate
 
-- [ ] Student sends; landlord sees; landlord replies; student sees both messages after reload.
-- [ ] Unauthenticated and nonparticipant access returns 401/403/404 as appropriate (do not leak private details).
-- [ ] No client-controlled sender spoofing; messages survive restart.
-- [ ] **STAGE 5 COMPLETE**
+- [x] Student sends; landlord sees; landlord replies; student sees both messages after reload.
+- [x] Unauthenticated and nonparticipant access returns 401/403/404 as appropriate (do not leak private details).
+- [x] No client-controlled sender spoofing; messages survive restart.
+- [x] **STAGE 5 COMPLETE**
 
 ---
 
